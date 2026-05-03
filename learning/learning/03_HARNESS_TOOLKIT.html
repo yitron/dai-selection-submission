@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03 - Harness Toolkit</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .subtitle { font-size: 1.2em; opacity: 0.9; }
+        .nav-sequence {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-sequence h3 { color: #667eea; margin-bottom: 15px; }
+        .nav-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .nav-link {
+            padding: 12px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s;
+        }
+        .nav-link:hover { background: #e7f3ff; transform: translateX(5px); }
+        .nav-link.current { background: #667eea; color: white; font-weight: bold; }
+        .section {
+            background: white;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h3 { color: #764ba2; margin: 20px 0 15px 0; }
+        h4 { color: #1f2937; margin: 15px 0 10px 0; }
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .info-box {
+            background: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .warning-box {
+            background: #fff3e0;
+            padding: 15px;
+            border-left: 4px solid #ff9800;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .enterprise-note {
+            background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+            padding: 20px;
+            border-left: 5px solid #ec4899;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .flow-diagram {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .flow-step {
+            background: #e7f3ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        .arrow {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        tr:hover {
+            background: #f9fafb;
+        }
+        code {
+            background: #f1f5f9;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛠️ 03 - Harness Toolkit</h1>
+            <p class="subtitle">Tool System & Execution Pipeline</p>
+            <p style="margin-top: 10px;">45+ tools providing agent capabilities: File ops, Bash, Web, MCP, Agents</p>
+        </header>
+
+        <div class="nav-sequence">
+            <h3>📖 Learning Path</h3>
+            <div class="nav-links">
+                <a href="01_OVERVIEW_AND_ENTRY_POINTS.html" class="nav-link">01 - Overview & Entry</a>
+                <a href="02_AGENT_LOOP.html" class="nav-link">02 - Agent Loop</a>
+                <a href="03_HARNESS_TOOLKIT.html" class="nav-link current">03 - Toolkit</a>
+                <a href="04_CONTEXT_MEMORY.html" class="nav-link">04 - Context & Memory</a>
+                <a href="05_GOVERNANCE.html" class="nav-link">05 - Governance</a>
+                <a href="06_MULTI_AGENT.html" class="nav-link">06 - Multi-Agent</a>
+                <a href="07_TELEMETRY_SESSIONS.html" class="nav-link">07 - Telemetry & Sessions</a>
+                <a href="08_GATEWAY_ARCHITECTURE.html" class="nav-link">08 - Gateway & Connections</a>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 What You'll Learn</h2>
+            <ul style="margin-left: 25px; line-height: 2;">
+                <li>Tool system architecture and common interface</li>
+                <li>Core tools: Bash, File operations, Web access, MCP, Agents</li>
+                <li>Tool execution pipeline with permission checks</li>
+                <li>Tool registry and dynamic assembly</li>
+                <li>Enterprise adaptations for multi-user toolkit</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🏗️ Tool System Architecture</h2>
+
+            <div class="info-box">
+                <strong>Design Pattern:</strong> Claude Code implements tools as <strong>independent modules</strong> with a common interface. Each tool is responsible for:
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Input validation (Zod schemas)</li>
+                    <li>Permission checks</li>
+                    <li>Execution logic</li>
+                    <li>Result formatting</li>
+                    <li>Error handling</li>
+                </ul>
+            </div>
+
+            <h3>Tool Interface Definition</h3>
+
+            <div class="code-block">
+// src/Tool.ts - Core tool type definition
+export type Tool = {
+  name: string;
+  description: string;
+  input_schema: ToolInputJSONSchema;
+
+  // Execution
+  execute(input: unknown, context: ToolContext): Promise<ToolResult>;
+
+  // Permission checking
+  requiresApproval?: (input: unknown) => boolean;
+  getApprovalMessage?: (input: unknown) => string;
+
+  // Progress reporting
+  onProgress?: (data: ToolProgressData) => void;
+};
+
+export type ToolResult = {
+  content: ContentBlock[];
+  isError?: boolean;
+  metadata?: Record<string, unknown>;
+};
+
+export type ToolContext = {
+  sessionId: string;
+  cwd: string;
+  abortSignal?: AbortSignal;
+};
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📋 Tool Categories</h2>
+
+            <div class="info-box">
+                <strong>src/tools.ts</strong> - Tool registry that assembles available tools based on permissions & features
+            </div>
+
+            <table>
+                <tr>
+                    <th>Category</th>
+                    <th>Tools</th>
+                    <th>Purpose</th>
+                </tr>
+                <tr>
+                    <td><strong>File Operations</strong></td>
+                    <td>Read, Write, Edit, Glob, Grep, NotebookEdit</td>
+                    <td>File system access and manipulation</td>
+                </tr>
+                <tr>
+                    <td><strong>Execution</strong></td>
+                    <td>Bash, PowerShell, Task</td>
+                    <td>Command execution and background processes</td>
+                </tr>
+                <tr>
+                    <td><strong>Agent Spawn</strong></td>
+                    <td>AgentTool, Skill</td>
+                    <td>Spawn sub-agents and reusable prompts</td>
+                </tr>
+                <tr>
+                    <td><strong>Web Access</strong></td>
+                    <td>WebFetch, WebSearch</td>
+                    <td>Web content retrieval and search</td>
+                </tr>
+                <tr>
+                    <td><strong>MCP Tools</strong></td>
+                    <td>Dynamic (loaded from servers)</td>
+                    <td>Model Context Protocol external tools</td>
+                </tr>
+                <tr>
+                    <td><strong>Workflow</strong></td>
+                    <td>EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskGet, TaskList</td>
+                    <td>Plan mode and task management</td>
+                </tr>
+                <tr>
+                    <td><strong>User Interaction</strong></td>
+                    <td>AskUserQuestion</td>
+                    <td>Multi-choice questions during execution</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Core Tools Deep Dive</h2>
+
+            <h3>1. BashTool</h3>
+            <div class="info-box">
+                <strong>Path:</strong> src/tools/BashTool/<br>
+                <strong>Purpose:</strong> Execute shell commands with safety checks and sandboxing
+            </div>
+
+            <div class="code-block">
+// BashTool key features
+{
+  name: 'Bash',
+  input_schema: {
+    command: string;       // Shell command to execute
+    timeout?: number;      // Max execution time (ms)
+    description?: string;  // What this command does
+    run_in_background?: boolean;  // Async execution
+  },
+
+  features: [
+    'Sandbox mode (Bubblewrap/Docker)',
+    'Background execution with task IDs',
+    'Timeout handling (default 2min, max 10min)',
+    'Git safety checks (prevent --no-verify, force push)',
+    'Dangerous command detection',
+    'Working directory persistence',
+    'Output truncation (30K chars)',
+  ]
+}
+            </div>
+
+            <h3>2. FileReadTool</h3>
+            <div class="info-box">
+                <strong>Path:</strong> src/tools/FileReadTool/<br>
+                <strong>Purpose:</strong> Read file contents with multimodal support
+            </div>
+
+            <div class="code-block">
+// FileReadTool capabilities
+{
+  name: 'Read',
+  input_schema: {
+    file_path: string;   // Absolute path required
+    offset?: number;     // Line number to start
+    limit?: number;      // Number of lines to read
+  },
+
+  features: [
+    'Line offset/limit for large files',
+    'Image reading (PNG, JPG - multimodal)',
+    'PDF parsing (text + visual)',
+    'Jupyter notebook support (.ipynb)',
+    'File existence validation',
+    'Line number formatting (cat -n style)',
+    'Malware warning system reminders',
+  ]
+}
+            </div>
+
+            <h3>3. FileEditTool</h3>
+            <div class="info-box">
+                <strong>Path:</strong> src/tools/FileEditTool/<br>
+                <strong>Purpose:</strong> Edit existing files via exact string replacement
+            </div>
+
+            <div class="code-block">
+// FileEditTool pattern
+{
+  name: 'Edit',
+  input_schema: {
+    file_path: string;
+    old_string: string;    // Must be unique in file
+    new_string: string;
+    replace_all?: boolean; // Replace all occurrences
+  },
+
+  features: [
+    'Exact string replacement',
+    'Replace-all mode for renaming',
+    'Indentation preservation',
+    'Uniqueness validation (prevents ambiguity)',
+    'Diff preview in IDE (Bridge mode)',
+    'Line number prefix handling',
+    'Must read file before editing',
+  ]
+}
+            </div>
+
+            <h3>4. AgentTool</h3>
+            <div class="info-box">
+                <strong>Path:</strong> src/tools/AgentTool/<br>
+                <strong>Purpose:</strong> Spawn specialized sub-agents
+            </div>
+
+            <div class="code-block">
+// AgentTool - spawn sub-agents
+{
+  name: 'Task',
+  input_schema: {
+    subagent_type: string;   // 'Bash', 'general-purpose', 'Explore', etc.
+    prompt: string;          // Task description
+    description: string;     // Short 3-5 word summary
+    max_turns?: number;      // Turn limit
+    model?: 'sonnet' | 'opus' | 'haiku';
+    run_in_background?: boolean;
+    resume?: string;         // Agent ID to resume
+  },
+
+  agent_types: [
+    'Bash - Command execution specialist',
+    'general-purpose - Multi-step tasks',
+    'Explore - Fast codebase search',
+    'Plan - Implementation planning',
+    'claude-code-guide - Documentation Q&A',
+  ]
+}
+            </div>
+
+            <h3>5. MCP Tools</h3>
+            <div class="info-box">
+                <strong>Path:</strong> src/services/mcp/<br>
+                <strong>Purpose:</strong> Dynamic tools from Model Context Protocol servers
+            </div>
+
+            <div class="code-block">
+// MCP integration
+{
+  features: [
+    'Dynamic tool discovery from external servers',
+    'Server lifecycle management (start/stop)',
+    'stdio and SSE transports',
+    'OAuth integration for authenticated tools',
+    'Resource management (files, URLs)',
+    'Tool schema validation',
+    'Multiple server support',
+  ],
+
+  example_servers: [
+    '@modelcontextprotocol/server-filesystem',
+    '@modelcontextprotocol/server-github',
+    '@modelcontextprotocol/server-postgres',
+  ]
+}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>⚙️ Tool Execution Pipeline</h2>
+
+            <div class="flow-diagram">
+                <h3>End-to-End Tool Execution</h3>
+
+                <div class="flow-step">
+                    <strong>1. Tool Discovery (API Response)</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// QueryEngine receives tool_use block from API
+{
+  type: 'tool_use',
+  id: 'toolu_01ABC',
+  name: 'Bash',
+  input: { command: 'ls -la', description: 'List files' }
+}
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>2. Tool Lookup</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// tools.ts - getTools() registry
+const tool = getTools().find(t => t.name === 'Bash');
+if (!tool) throw new Error('Tool not found');
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>3. Permission Check</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// hooks/toolPermission/useCanUseTool.tsx
+const permitted = await useCanUseTool(tool, input);
+// Shows approval dialog if needed
+// Checks bypass permissions mode
+// Validates against policy limits
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>4. Execution</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Tool.execute() with telemetry
+const startTime = Date.now();
+const span = startToolSpan(tool.name, input);
+
+try {
+  const result = await tool.execute(input, context);
+  logEvent('tengu_tool_use_completed', {
+    toolName: sanitizeToolNameForAnalytics(tool.name),
+    duration_ms: Date.now() - startTime,
+    is_error: false,
+  });
+  return result;
+} catch (error) {
+  logEvent('tengu_tool_use_failed', { ... });
+  throw error;
+} finally {
+  endToolSpan(span);
+}
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>5. Result Assembly</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Create tool_result message block
+const toolResult = {
+  type: 'tool_result',
+  tool_use_id: 'toolu_01ABC',
+  content: result.content,
+  is_error: result.isError,
+};
+
+// Add to conversation and continue loop
+messages.push(toolResult);
+return query(messages); // Recursive call
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Tool Registry System</h2>
+
+            <div class="code-block">
+// src/tools.ts - Dynamic tool assembly
+export function getTools(): Tool[] {
+  const tools: Tool[] = [];
+
+  // Core tools (always available)
+  tools.push(ReadTool);
+  tools.push(WriteTool);
+  tools.push(EditTool);
+  tools.push(GlobTool);
+  tools.push(GrepTool);
+
+  // Conditional tools based on platform
+  if (process.platform === 'win32') {
+    tools.push(PowerShellTool);
+  } else {
+    tools.push(BashTool);
+  }
+
+  // Feature-gated tools
+  if (getSettings().features.webSearch) {
+    tools.push(WebSearchTool);
+  }
+
+  if (getSettings().features.agentSpawning) {
+    tools.push(AgentTool);
+  }
+
+  // MCP tools (dynamically loaded)
+  const mcpTools = getMCPTools();
+  tools.push(...mcpTools);
+
+  // Permission filtering
+  return tools.filter(tool =>
+    hasPermission(tool, getPermissionMode())
+  );
+}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🏢 Enterprise Toolkit Adaptations</h2>
+
+            <div class="enterprise-note">
+                <strong>Multi-User Tool System:</strong>
+                <p style="margin-top: 10px;">For enterprise systems, you'll need to enhance the toolkit:</p>
+
+                <h4 style="margin-top: 15px;">1. Tool Isolation</h4>
+                <ul style="margin-left: 20px;">
+                    <li><strong>Problem:</strong> Tools share execution environment</li>
+                    <li><strong>Solution:</strong> Run tools in user-specific containers/sandboxes</li>
+                </ul>
+                <div class="code-block" style="margin-top: 10px;">
+// Enterprise: Per-user tool execution
+const result = await executeInUserContainer({
+  userId: context.userId,
+  orgId: context.orgId,
+  tool: 'Bash',
+  command: input.command,
+  resourceLimits: {
+    cpu: '1 core',
+    memory: '512MB',
+    timeout: '5min',
+  }
+});
+                </div>
+
+                <h4 style="margin-top: 15px;">2. Resource Limits</h4>
+                <ul style="margin-left: 20px;">
+                    <li>CPU/memory/time limits per user/org</li>
+                    <li>Prevent resource exhaustion attacks</li>
+                    <li>Fair resource allocation across users</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">3. Tool Quotas</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Track tool usage per user (e.g., max 100 Bash calls/hour)</li>
+                    <li>Different quota tiers (free, pro, enterprise)</li>
+                    <li>Quota reset policies (hourly, daily, monthly)</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">4. Tool Allowlists</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Per-org tool restrictions (disable BashTool for some orgs)</li>
+                    <li>Role-based tool access (admin vs developer vs analyst)</li>
+                    <li>Dynamic tool enablement based on plan/tier</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">5. Audit Logging</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Log all tool executions with user/org context</li>
+                    <li>Compliance requirements (SOC2, GDPR, HIPAA)</li>
+                    <li>Forensic analysis for security incidents</li>
+                </ul>
+
+                <div class="code-block" style="margin-top: 10px;">
+// Enterprise audit log
+{
+  timestamp: '2026-04-03T10:30:00Z',
+  userId: 'user_abc123',
+  orgId: 'org_xyz789',
+  sessionId: 'ses_def456',
+  tool: 'Bash',
+  input: { command: 'git commit -m "Fix bug"' },
+  output: { exitCode: 0, stdout: '...' },
+  duration_ms: 1500,
+  resourceUsage: { cpu: '0.5s', memory: '45MB' },
+}
+                </div>
+
+                <h4 style="margin-top: 15px;">6. Tool Result Caching</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Cache deterministic tool results (e.g., file reads)</li>
+                    <li>Per-user cache isolation</li>
+                    <li>Cache invalidation on file modifications</li>
+                    <li>Cost savings on repeated operations</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎬 Next Step</h2>
+            <div class="info-box">
+                <strong>Continue to:</strong> <a href="04_CONTEXT_MEMORY.html">04 - Context & Memory</a> to learn about long-term memory, file history, and context injection (MEMORY.md, CLAUDE.md)
+            </div>
+        </div>
+    </div>
+</body>
+</html>

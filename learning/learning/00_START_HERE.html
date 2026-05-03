@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code → Enterprise Multi-User: Learning Path</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            font-size: 1.4em;
+            opacity: 0.95;
+        }
+        .content {
+            padding: 40px;
+        }
+        .learning-path {
+            display: grid;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .path-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 6px solid #667eea;
+            border-radius: 10px;
+            padding: 25px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .path-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-left-color: #764ba2;
+        }
+        .path-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            text-align: center;
+            border-radius: 50%;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-right: 20px;
+            float: left;
+        }
+        .path-content {
+            overflow: hidden;
+        }
+        .path-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 10px;
+        }
+        .path-desc {
+            color: #666;
+            line-height: 1.8;
+        }
+        .path-topics {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #888;
+        }
+        .quick-facts {
+            background: #e7f3ff;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 30px 0;
+        }
+        .quick-facts h3 {
+            color: #1e3a8a;
+            margin-bottom: 15px;
+        }
+        .fact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .fact {
+            text-align: center;
+        }
+        .fact-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .fact-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        .cta {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        .cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        }
+        a { color: #3b82f6; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏢 Claude Code → Enterprise Multi-User</h1>
+            <p class="subtitle">Complete Architecture Learning Path</p>
+            <p style="margin-top: 20px; font-size: 0.95em; opacity: 0.9;">
+                From 1-to-1 CLI to Enterprise-Scale Multi-Tenant System
+            </p>
+        </header>
+
+        <div class="content">
+            <div class="quick-facts">
+                <h3>📊 What You're Learning</h3>
+                <div class="fact-grid">
+                    <div class="fact">
+                        <div class="fact-number">757</div>
+                        <div class="fact-label">TypeScript Files</div>
+                    </div>
+                    <div class="fact">
+                        <div class="fact-number">45+</div>
+                        <div class="fact-label">Tool Implementations</div>
+                    </div>
+                    <div class="fact">
+                        <div class="fact-number">4</div>
+                        <div class="fact-label">Multi-Agent Systems</div>
+                    </div>
+                    <div class="fact">
+                        <div class="fact-number">3</div>
+                        <div class="fact-label">Connection Patterns</div>
+                    </div>
+                </div>
+            </div>
+
+            <h2 style="color: #1e3a8a; margin: 40px 0 20px 0;">📚 Learning Path (Step-by-Step)</h2>
+
+            <div class="learning-path">
+                <a href="01_OVERVIEW_AND_ENTRY_POINTS.html" class="path-item">
+                    <span class="path-number">01</span>
+                    <div class="path-content">
+                        <div class="path-title">Overview & Entry Points</div>
+                        <div class="path-desc">
+                            How Claude Code boots, fast-path routing, execution modes (REPL, Bridge, Daemon, MCP)
+                        </div>
+                        <div class="path-topics">
+                            📌 cli.tsx · main.tsx · Module loading · Feature flags
+                        </div>
+                    </div>
+                </a>
+
+                <div class="path-item" onclick="alert('File 02 coming next! Contains: query.ts, QueryEngine, REPL loop, streaming')">
+                    <span class="path-number">02</span>
+                    <div class="path-content">
+                        <div class="path-title">Agent Loop (Core Execution)</div>
+                        <div class="path-desc">
+                            User input → LLM processing → tool execution → response assembly
+                        </div>
+                        <div class="path-topics">
+                            📌 REPL.tsx · query.ts · QueryEngine · Streaming · Tool coordination
+                        </div>
+                    </div>
+                </div>
+
+                <div class="path-item" onclick="alert('File 03 coming! Contains: Tool system, BashTool, FileOps, MCP, AgentTool, permissions')">
+                    <span class="path-number">03</span>
+                    <div class="path-content">
+                        <div class="path-title">Harness Toolkit</div>
+                        <div class="path-desc">
+                            45+ tools providing agent capabilities (Bash, File ops, Web, MCP, Agents)
+                        </div>
+                        <div class="path-topics">
+                            📌 BashTool · FileEdit/Read/Write · GlobTool · GrepTool · MCPTools · AgentTool
+                        </div>
+                    </div>
+                </div>
+
+                <div class="path-item" onclick="alert('File 04 coming! Contains: MEMORY.md, file history, CLAUDE.md, context injection')">
+                    <span class="path-number">04</span>
+                    <div class="path-content">
+                        <div class="path-title">Context & Memory Management</div>
+                        <div class="path-desc">
+                            Long-term memory, file history, system context, conversation compaction
+                        </div>
+                        <div class="path-topics">
+                            📌 memdir/ · MEMORY.md · fileHistory · System context · Compaction
+                        </div>
+                    </div>
+                </div>
+
+                <div class="path-item" onclick="alert('File 05 coming! Contains: Permission layers, policies, sandbox, RBAC patterns')">
+                    <span class="path-number">05</span>
+                    <div class="path-content">
+                        <div class="path-title">Governance (Permissions & Security)</div>
+                        <div class="path-desc">
+                            Multi-layer permission system (modes → policies → rules → sandbox)
+                        </div>
+                        <div class="path-topics">
+                            📌 Permission modes · Policy limits · Dangerous patterns · Sandbox · Auto-mode classifier
+                        </div>
+                    </div>
+                </div>
+
+                <div class="path-item" onclick="alert('File 06 coming! Contains: Coordinator, Team mode, Standard agents, XML messaging')">
+                    <span class="path-number">06</span>
+                    <div class="path-content">
+                        <div class="path-title">Multi-Agent Orchestration</div>
+                        <div class="path-desc">
+                            Coordinator mode (1 leader + N workers), Team mode (peer-to-peer), Standard agents
+                        </div>
+                        <div class="path-topics">
+                            📌 Coordinator · XML messaging · Team/Swarm · Agent types · Communication patterns
+                        </div>
+                    </div>
+                </div>
+
+                <div class="path-item" onclick="alert('File 07 coming! Contains: OpenTelemetry, metrics/traces/logs, session storage, training data')">
+                    <span class="path-number">07</span>
+                    <div class="path-content">
+                        <div class="path-title">Telemetry & Session Control</div>
+                        <div class="path-desc">
+                            OpenTelemetry (metrics/traces/logs), session persistence, incident management, model training
+                        </div>
+                        <div class="path-topics">
+                            📌 OpenTelemetry · Span hierarchy · Session .jsonl · Error logs · Training pipeline
+                        </div>
+                    </div>
+                </div>
+
+                <div class="path-item" onclick="alert('File 08 coming! Contains: Bridge polling, Remote WebSocket, Direct Connect, vs OpenClaw comparison')">
+                    <span class="path-number">08</span>
+                    <div class="path-content">
+                        <div class="path-title">Gateway & Connection Architecture</div>
+                        <div class="path-desc">
+                            3 connection patterns (Bridge HTTP polling, Remote WebSocket, Direct Connect) + OpenClaw comparison
+                        </div>
+                        <div class="path-topics">
+                            📌 Bridge polling · SessionsWebSocket · Direct Connect · KAIROS · vs OpenClaw
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin: 50px 0;">
+                <a href="01_OVERVIEW_AND_ENTRY_POINTS.html" class="cta">
+                    🚀 Start Learning: 01 - Overview & Entry Points
+                </a>
+            </div>
+
+            <div class="quick-facts" style="background: #fff3e0;">
+                <h3>🎯 Enterprise Adaptations You'll Learn</h3>
+                <ul style="margin-left: 25px; line-height: 2; color: #666;">
+                    <li><strong>State Isolation:</strong> Global STATE → Per-user context (user_id, org_id)</li>
+                    <li><strong>Session Storage:</strong> Local files → Distributed storage (S3, PostgreSQL)</li>
+                    <li><strong>Telemetry:</strong> Single OpenTelemetry → Multi-tenant with labels</li>
+                    <li><strong>Permissions:</strong> User-level → RBAC with org hierarchies</li>
+                    <li><strong>Agent Execution:</strong> Local processes → Kubernetes pods</li>
+                    <li><strong>Memory:</strong> MEMORY.md files → Vector database (pgvector)</li>
+                    <li><strong>Gateway:</strong> HTTP polling → Centralized routing (like OpenClaw)</li>
+                </ul>
+            </div>
+
+            <div style="margin-top: 50px; padding-top: 30px; border-top: 2px solid #e9ecef; color: #888; font-size: 0.9em;">
+                <p><strong>Source Analysis:</strong> /Users/hongzhuanglim/claude_code/claude-code-source-code-main</p>
+                <p><strong>Created:</strong> April 2026</p>
+                <p><strong>Purpose:</strong> Map single-user CLI architecture to enterprise multi-tenant system</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

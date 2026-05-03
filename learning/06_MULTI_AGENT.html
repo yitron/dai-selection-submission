@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>06 - Multi-Agent Orchestration</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .subtitle { font-size: 1.2em; opacity: 0.9; }
+        .nav-sequence {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-sequence h3 { color: #667eea; margin-bottom: 15px; }
+        .nav-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .nav-link {
+            padding: 12px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s;
+        }
+        .nav-link:hover { background: #e7f3ff; transform: translateX(5px); }
+        .nav-link.current { background: #667eea; color: white; font-weight: bold; }
+        .section {
+            background: white;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h3 { color: #764ba2; margin: 20px 0 15px 0; }
+        h4 { color: #1f2937; margin: 15px 0 10px 0; }
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .info-box {
+            background: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .success-box {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            padding: 20px;
+            border-left: 5px solid #10b981;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .warning-box {
+            background: #fff3e0;
+            padding: 15px;
+            border-left: 4px solid #ff9800;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .enterprise-note {
+            background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+            padding: 20px;
+            border-left: 5px solid #ec4899;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .flow-diagram {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .flow-step {
+            background: #e7f3ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        .arrow {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+        .module-box {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .module-name {
+            font-weight: 700;
+            font-size: 1.1em;
+            color: #1e40af;
+        }
+        .module-path {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            background: #e0e7ff;
+            padding: 4px 10px;
+            border-radius: 4px;
+            color: #3730a3;
+        }
+        .module-desc {
+            color: #4b5563;
+            margin-bottom: 12px;
+            line-height: 1.7;
+        }
+        .module-features {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 3px solid #60a5fa;
+        }
+        .module-features ul {
+            margin-left: 20px;
+        }
+        .module-features li {
+            margin-bottom: 6px;
+            color: #374151;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        tr:hover {
+            background: #f9fafb;
+        }
+        code {
+            background: #f1f5f9;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 06 - Multi-Agent Orchestration</h1>
+            <p class="subtitle">Coordinator, Team Mode, Agent Types</p>
+            <p style="margin-top: 10px;">4 Multi-Agent Systems: Coordinator, Team, Standard, KAIROS</p>
+        </header>
+
+        <div class="nav-sequence">
+            <h3>📖 Learning Path</h3>
+            <div class="nav-links">
+                <a href="01_OVERVIEW_AND_ENTRY_POINTS.html" class="nav-link">01 - Overview & Entry</a>
+                <a href="02_AGENT_LOOP.html" class="nav-link">02 - Agent Loop</a>
+                <a href="03_HARNESS_TOOLKIT.html" class="nav-link">03 - Toolkit</a>
+                <a href="04_CONTEXT_MEMORY.html" class="nav-link">04 - Context & Memory</a>
+                <a href="05_GOVERNANCE.html" class="nav-link">05 - Governance</a>
+                <a href="06_MULTI_AGENT.html" class="nav-link current">06 - Multi-Agent</a>
+                <a href="07_TELEMETRY_SESSIONS.html" class="nav-link">07 - Telemetry & Sessions</a>
+                <a href="08_GATEWAY_ARCHITECTURE.html" class="nav-link">08 - Gateway & Connections</a>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 What You'll Learn</h2>
+            <ul style="margin-left: 25px; line-height: 2;">
+                <li>4 multi-agent systems in Claude Code</li>
+                <li>Coordinator mode (1 leader + N workers with XML messaging)</li>
+                <li>Team mode (peer-to-peer collaboration)</li>
+                <li>Standard agents (parent-child hierarchy)</li>
+                <li>KAIROS (remote session access)</li>
+                <li>Enterprise multi-agent adaptations</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🏗️ Multi-Agent Architecture</h2>
+
+            <div class="success-box">
+                <strong>✅ Four Multi-Agent Systems:</strong>
+                <table style="margin-top: 15px;">
+                    <tr>
+                        <th>System</th>
+                        <th>Architecture</th>
+                        <th>Use Case</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Coordinator Mode</strong></td>
+                        <td>1 leader + N workers (hierarchical)</td>
+                        <td>Parallel task decomposition</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Team Mode</strong></td>
+                        <td>N peers (flat, shared memory)</td>
+                        <td>Collaborative development</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Standard Agents</strong></td>
+                        <td>Parent-child spawning</td>
+                        <td>Delegation & specialization</td>
+                    </tr>
+                    <tr>
+                        <td><strong>KAIROS</strong></td>
+                        <td>Remote session access</td>
+                        <td>View/assist cloud sessions</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 1. Coordinator Mode (Hierarchical)</h2>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">coordinator/coordinatorMode.ts</span>
+                    <span class="module-path">src/coordinator/coordinatorMode.ts</span>
+                </div>
+                <div class="module-desc">
+                    Coordinator mode implementation - orchestrate multiple worker agents
+                </div>
+                <div class="module-features">
+                    <strong>Coordinator Capabilities:</strong>
+                    <ul>
+                        <li>Spawn worker agents via <code>Task</code> tool</li>
+                        <li>Send follow-up messages via <code>SendMessage</code> tool</li>
+                        <li>Stop workers via <code>TaskStop</code> tool</li>
+                        <li>Receive worker results as user-role messages (XML format)</li>
+                        <li>Subscribe to GitHub PR events</li>
+                    </ul>
+                    <strong>Worker Restrictions:</strong>
+                    <ul>
+                        <li>Limited tool access (Bash, Read, Edit, MCP tools)</li>
+                        <li>Cannot spawn sub-agents (flat hierarchy)</li>
+                        <li>Results sent back to coordinator automatically</li>
+                        <li>Isolated conversation context</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Coordinator Message Flow</h3>
+
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <strong>1. User Request</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+User: "Implement authentication and write tests"
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>2. Coordinator Planning</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+Coordinator (to user):
+"I'll spawn two workers:
+1. Worker A: Implement authentication logic
+2. Worker B: Write comprehensive tests"
+
+// Spawns agents
+await Task({
+  prompt: "Implement OAuth2 authentication in src/auth.ts",
+  subagent_type: "general-purpose"
+}); // Returns agent_id: "agent_abc123"
+
+await Task({
+  prompt: "Write tests for authentication in tests/auth.test.ts",
+  subagent_type: "general-purpose"
+}); // Returns agent_id: "agent_def456"
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>3. Workers Execute (Parallel)</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Worker A executes independently
+Worker A:
+  - Reads existing code
+  - Implements OAuth2 logic
+  - Uses Bash, Edit tools
+  - Returns result to coordinator
+
+// Worker B executes in parallel
+Worker B:
+  - Reads authentication code
+  - Writes test cases
+  - Runs tests via Bash
+  - Returns result to coordinator
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>4. Results Arrive as User Messages (XML)</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Worker results arrive as XML in user-role messages
+
+&lt;task-notification&gt;
+&lt;task-id&gt;agent_abc123&lt;/task-id&gt;
+&lt;status&gt;completed&lt;/status&gt;
+&lt;result&gt;
+I've implemented OAuth2 authentication in src/auth.ts with:
+- Login endpoint with JWT tokens
+- Refresh token flow
+- Logout endpoint
+&lt;/result&gt;
+&lt;usage&gt;
+  &lt;total_tokens&gt;12543&lt;/total_tokens&gt;
+  &lt;tool_uses&gt;8&lt;/tool_uses&gt;
+&lt;/usage&gt;
+&lt;/task-notification&gt;
+
+// Coordinator sees this as a USER message (not assistant)
+// This is how the coordinator receives worker outputs
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>5. Coordinator Synthesis</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+Coordinator (to user):
+"Both workers completed successfully:
+
+✅ Authentication implemented (Worker A)
+✅ Tests written and passing (Worker B)
+
+The OAuth2 flow is ready with 15 passing tests."
+                    </div>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <strong>Key Pattern:</strong> Worker results arrive as <strong>user-role messages</strong> with XML content. This allows the coordinator to process multiple worker outputs in a single turn.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>👥 2. Team Mode (Peer-to-Peer)</h2>
+
+            <div class="info-box">
+                <strong>Team Mode vs Coordinator Mode:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Coordinator:</strong> Hierarchical (1 leader + N workers)</li>
+                    <li><strong>Team:</strong> Flat (N peers collaborating)</li>
+                </ul>
+            </div>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">utils/swarm/</span>
+                    <span class="module-path">src/utils/swarm/ (15+ files)</span>
+                </div>
+                <div class="module-desc">
+                    Team mode implementation - peer agent collaboration
+                </div>
+                <div class="module-features">
+                    <strong>Key Concepts:</strong>
+                    <ul>
+                        <li><strong>Teammates:</strong> Agents in the same team (shared team name)</li>
+                        <li><strong>Shared Memory:</strong> Team-scoped MEMORY.md file</li>
+                        <li><strong>Cross-Agent Messages:</strong> Send messages between teammates</li>
+                        <li><strong>Team Lifecycle:</strong> TeamCreate, TeamDelete tools</li>
+                    </ul>
+                    <strong>Key Files:</strong>
+                    <ul>
+                        <li><strong>teamHelpers.ts:</strong> Team creation/deletion</li>
+                        <li><strong>teammatePromptAddendum.ts:</strong> Team context injection</li>
+                        <li><strong>teammateModeSnapshot.ts:</strong> Team state snapshots</li>
+                        <li><strong>reconnection.ts:</strong> Reconnect to existing teams</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Team Mode Example</h3>
+
+            <div class="code-block">
+// Create a team
+await TeamCreate({ teamName: "auth-dev-team" });
+
+// Spawn teammate agents
+await Task({
+  prompt: "Implement backend authentication",
+  team: "auth-dev-team"
+});
+
+await Task({
+  prompt: "Implement frontend login UI",
+  team: "auth-dev-team"
+});
+
+// Agents share:
+// - Team-scoped MEMORY.md
+// - Can send messages to each other
+// - Collaborate on shared codebase
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 3. Standard Agents (Parent-Child)</h2>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">tools/AgentTool/</span>
+                    <span class="module-path">src/tools/AgentTool/ (17 files)</span>
+                </div>
+                <div class="module-desc">
+                    Standard agent spawning system
+                </div>
+                <div class="module-features">
+                    <strong>Key Files:</strong>
+                    <ul>
+                        <li><strong>AgentTool.tsx (234KB):</strong> Main agent tool implementation</li>
+                        <li><strong>runAgent.ts (36KB):</strong> Agent execution loop</li>
+                        <li><strong>forkSubagent.ts:</strong> Spawn child process for agent</li>
+                        <li><strong>resumeAgent.ts:</strong> Resume paused agents</li>
+                        <li><strong>agentMemory.ts:</strong> Agent-specific memory isolation</li>
+                        <li><strong>loadAgentsDir.ts (26KB):</strong> Load custom agent definitions</li>
+                        <li><strong>built-in/:</strong> Built-in agent types (Explore, Plan, Bash, etc.)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Agent Types</h3>
+
+            <table>
+                <tr>
+                    <th>Agent Type</th>
+                    <th>Purpose</th>
+                    <th>Available Tools</th>
+                </tr>
+                <tr>
+                    <td><strong>general-purpose</strong></td>
+                    <td>Full-featured agent for complex tasks</td>
+                    <td>All tools (Bash, File ops, Web, MCP, sub-agents)</td>
+                </tr>
+                <tr>
+                    <td><strong>Explore</strong></td>
+                    <td>Fast codebase exploration</td>
+                    <td>Glob, Grep, Read (no Edit/Write)</td>
+                </tr>
+                <tr>
+                    <td><strong>Plan</strong></td>
+                    <td>Implementation planning</td>
+                    <td>Glob, Grep, Read, ExitPlanMode</td>
+                </tr>
+                <tr>
+                    <td><strong>Bash</strong></td>
+                    <td>Command execution specialist</td>
+                    <td>Bash only</td>
+                </tr>
+                <tr>
+                    <td><strong>test-runner</strong></td>
+                    <td>Run tests after code changes</td>
+                    <td>Bash, Read</td>
+                </tr>
+                <tr>
+                    <td><strong>Custom Agents</strong></td>
+                    <td>User-defined agent types</td>
+                    <td>Configurable via .agents/ directory</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>🌐 4. KAIROS (Remote Session Access)</h2>
+
+            <div class="info-box">
+                <strong>KAIROS (Assistant Mode):</strong> Connect to remote CCR (Claude Code Remote) sessions running on claude.ai
+            </div>
+
+            <div class="code-block">
+// Connect to remote session
+$ claude assistant [session-id]
+
+// Features:
+// - View-only mode (no sending commands directly)
+// - See session activity in real-time
+// - Access via WebSocket to claude.ai API
+// - Useful for customer support / debugging
+            </div>
+
+            <div class="warning-box">
+                <strong>Use Case:</strong> Enterprise support teams can view user sessions to help debug issues without taking over control.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🏢 Enterprise Multi-Agent Adaptations</h2>
+
+            <div class="enterprise-note">
+                <strong>Multi-Tenant Agent System:</strong>
+                <p style="margin-top: 10px;">For enterprise systems, enhance multi-agent capabilities:</p>
+
+                <h4 style="margin-top: 15px;">1. Agent Pools</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Pre-warmed agent instances per user/org</li>
+                    <li>Kubernetes pods with auto-scaling</li>
+                    <li>Agent instance reuse to reduce cold starts</li>
+                </ul>
+                <div class="code-block" style="margin-top: 10px;">
+// Enterprise agent pool
+class AgentPool {
+  private pools: Map<string, Agent[]> = new Map();
+
+  async getAgent(orgId: string): Promise<Agent> {
+    const pool = this.pools.get(orgId) || [];
+
+    // Try to reuse warm agent
+    if (pool.length > 0) {
+      return pool.pop()!;
+    }
+
+    // Spawn new agent pod
+    return await spawnAgentPod({
+      orgId,
+      resources: { cpu: '1 core', memory: '2GB' }
+    });
+  }
+
+  async releaseAgent(orgId: string, agent: Agent): void {
+    const pool = this.pools.get(orgId) || [];
+    pool.push(agent);
+    this.pools.set(orgId, pool);
+  }
+}
+                </div>
+
+                <h4 style="margin-top: 15px;">2. Agent Quotas</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Limit concurrent agents per user (e.g., max 5)</li>
+                    <li>Different quotas for free/pro/enterprise tiers</li>
+                    <li>Queue agent requests when limit reached</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">3. Agent Scheduling</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Priority queues for premium users</li>
+                    <li>Fair scheduling across users</li>
+                    <li>Agent preemption for critical tasks</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">4. Cross-User Agents</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Share agents across org (with permissions)</li>
+                    <li>Org-wide agent library</li>
+                    <li>Agent marketplace for custom agents</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">5. Agent Monitoring</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Real-time dashboard of active agents</li>
+                    <li>Agent health checks & auto-recovery</li>
+                    <li>Cost tracking per agent</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">6. Agent Billing</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Track agent usage costs per user/org</li>
+                    <li>Charge based on agent-hours or tokens</li>
+                    <li>Budget alerts and auto-stop</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">7. Hierarchical Teams</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Multi-level coordinator hierarchies</li>
+                    <li>Coordinator of coordinators pattern</li>
+                    <li>Scale to 100+ agents per task</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎬 Next Step</h2>
+            <div class="info-box">
+                <strong>Continue to:</strong> <a href="07_TELEMETRY_SESSIONS.html">07 - Telemetry & Sessions</a> to learn about OpenTelemetry, session control, incident management, and model training
+            </div>
+        </div>
+    </div>
+</body>
+</html>

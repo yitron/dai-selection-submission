@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>05 - Governance (Permissions & Security)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .subtitle { font-size: 1.2em; opacity: 0.9; }
+        .nav-sequence {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-sequence h3 { color: #667eea; margin-bottom: 15px; }
+        .nav-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .nav-link {
+            padding: 12px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s;
+        }
+        .nav-link:hover { background: #e7f3ff; transform: translateX(5px); }
+        .nav-link.current { background: #667eea; color: white; font-weight: bold; }
+        .section {
+            background: white;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h3 { color: #764ba2; margin: 20px 0 15px 0; }
+        h4 { color: #1f2937; margin: 15px 0 10px 0; }
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .info-box {
+            background: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .warning-box {
+            background: #fff3e0;
+            padding: 15px;
+            border-left: 4px solid #ff9800;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .enterprise-note {
+            background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+            padding: 20px;
+            border-left: 5px solid #ec4899;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .flow-diagram {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .flow-step {
+            background: #e7f3ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        .arrow {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+        .module-box {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .module-name {
+            font-weight: 700;
+            font-size: 1.1em;
+            color: #1e40af;
+        }
+        .module-path {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            background: #e0e7ff;
+            padding: 4px 10px;
+            border-radius: 4px;
+            color: #3730a3;
+        }
+        .module-desc {
+            color: #4b5563;
+            margin-bottom: 12px;
+            line-height: 1.7;
+        }
+        .module-features {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 3px solid #60a5fa;
+        }
+        .module-features ul {
+            margin-left: 20px;
+        }
+        .module-features li {
+            margin-bottom: 6px;
+            color: #374151;
+        }
+        code {
+            background: #f1f5f9;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔒 05 - Governance</h1>
+            <p class="subtitle">Permissions, Security Policies, Sandboxing</p>
+            <p style="margin-top: 10px;">Multi-layer security: Modes → Policies → Rules → Patterns → Sandbox</p>
+        </header>
+
+        <div class="nav-sequence">
+            <h3>📖 Learning Path</h3>
+            <div class="nav-links">
+                <a href="01_OVERVIEW_AND_ENTRY_POINTS.html" class="nav-link">01 - Overview & Entry</a>
+                <a href="02_AGENT_LOOP.html" class="nav-link">02 - Agent Loop</a>
+                <a href="03_HARNESS_TOOLKIT.html" class="nav-link">03 - Toolkit</a>
+                <a href="04_CONTEXT_MEMORY.html" class="nav-link">04 - Context & Memory</a>
+                <a href="05_GOVERNANCE.html" class="nav-link current">05 - Governance</a>
+                <a href="06_MULTI_AGENT.html" class="nav-link">06 - Multi-Agent</a>
+                <a href="07_TELEMETRY_SESSIONS.html" class="nav-link">07 - Telemetry & Sessions</a>
+                <a href="08_GATEWAY_ARCHITECTURE.html" class="nav-link">08 - Gateway & Connections</a>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 What You'll Learn</h2>
+            <ul style="margin-left: 25px; line-height: 2;">
+                <li>Multi-layer permission system (defense in depth)</li>
+                <li>Permission modes: ask, auto, bypass</li>
+                <li>Policy limits for enterprise organizations</li>
+                <li>Dangerous pattern detection</li>
+                <li>Sandbox execution (Bubblewrap/Docker)</li>
+                <li>Enterprise RBAC adaptations</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🏗️ Governance Architecture</h2>
+
+            <div class="warning-box">
+                <strong>⚠️ Security Model:</strong> Claude Code implements a <strong>multi-layered permission system</strong> with:
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Permission modes (ask, auto, bypass)</li>
+                    <li>Tool-level allow/deny rules</li>
+                    <li>Dangerous command detection</li>
+                    <li>Sandbox execution (Bubblewrap/Docker)</li>
+                    <li>Organization policy limits (enterprise)</li>
+                    <li>Remote managed settings</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔐 Permission Check Flow (5 Layers)</h2>
+
+            <div class="flow-diagram">
+                <h3>Defense-in-Depth Security</h3>
+
+                <div class="flow-step">
+                    <strong>Layer 1: Permission Mode Check</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Permission modes (stored in settings)
+type PermissionMode = 'ask' | 'auto' | 'bypass';
+
+// ask: Always prompt user for approval (default)
+// auto: Auto-approve safe tools, prompt for dangerous (with classifier)
+// bypass: Never prompt (dangerous, testing only)
+
+const mode = getPermissionMode(); // From settings.json
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>Layer 2: Policy Limits Check (Enterprise)</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// services/policyLimits/index.ts
+// Organization-level restrictions from API
+
+const isPolicyAllowed = async (feature: string): Promise<boolean> => {
+  const limits = await getPolicyLimits();
+
+  // Example restrictions:
+  // - allow_remote_control: false
+  // - allow_web_search: false
+  // - max_token_usage: 1000000
+  // - allowed_models: ['claude-sonnet-4']
+
+  return !limits.restrictions[feature];
+};
+
+// Fails OPEN on errors (non-blocking)
+// Cached with ETag for performance
+// Background polling every hour
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>Layer 3: Tool Permission Rules</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// utils/permissions/PermissionRule.ts
+
+type PermissionRule = {
+  tool: string;           // Tool name (e.g., 'Bash', 'FileEdit')
+  content?: string;       // Optional content matcher
+  value: 'allow' | 'deny'; // Rule action
+  source: PermissionRuleSource; // Where rule came from
+};
+
+// Examples:
+// Allow all git commands:
+{ tool: 'Bash', content: 'git*', value: 'allow' }
+
+// Deny destructive git operations:
+{ tool: 'Bash', content: 'git push --force*', value: 'deny' }
+
+// Allow reading any file:
+{ tool: 'Read', value: 'allow' }
+
+// Deny editing .env files:
+{ tool: 'Edit', content: '**/.env', value: 'deny' }
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>Layer 4: Dangerous Pattern Detection</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// utils/permissions/dangerousPatterns.ts
+
+const DANGEROUS_BASH_PATTERNS = [
+  'python', 'python3', 'node', 'ruby', 'perl',
+  'curl', 'wget', 'nc', 'netcat',
+  'rm -rf', 'chmod', 'chown',
+  'eval', 'exec', 'sudo',
+];
+
+// For auto mode: block dangerous patterns even with allow rules
+const isDangerous = isDangerousBashPermission(toolName, command);
+if (mode === 'auto' && isDangerous) {
+  // Always prompt, never auto-approve
+  return requireUserApproval();
+}
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>Layer 5: Sandbox Execution</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// utils/sandbox/sandbox-adapter.ts
+
+class SandboxManager {
+  static isSandboxingEnabled(): boolean {
+    // Check if Bubblewrap (Linux) or Docker available
+    return hasBuiltinSandbox() || hasDockerSandbox();
+  }
+
+  static executeInSandbox(command: string): Promise<Result> {
+    // Create isolated environment:
+    // - Read-only /usr, /bin, /lib
+    // - Writable workspace directory only
+    // - No network (unless explicitly allowed)
+    // - Limited PIDs, memory, CPU
+
+    return bubblewrap.run({
+      command,
+      allowedPaths: [workspaceDir],
+      network: false,
+      timeout: 120000,
+    });
+  }
+}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📦 Key Governance Modules</h2>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">utils/permissions/</span>
+                    <span class="module-path">src/utils/permissions/ (27 files)</span>
+                </div>
+                <div class="module-desc">
+                    Permission system implementation - rule parsing, checking, user prompts
+                </div>
+                <div class="module-features">
+                    <strong>Core Files:</strong>
+                    <ul>
+                        <li><strong>PermissionMode.ts:</strong> Permission mode definitions & parsing</li>
+                        <li><strong>PermissionRule.ts:</strong> Rule types & matching logic</li>
+                        <li><strong>permissions.ts:</strong> Main permission checking function</li>
+                        <li><strong>permissionsLoader.ts:</strong> Load rules from disk (settings.json, .permissions files)</li>
+                        <li><strong>dangerousPatterns.ts:</strong> Dangerous command detection patterns</li>
+                        <li><strong>permissionSetup.ts:</strong> Initial permission context setup</li>
+                        <li><strong>autoModeState.ts:</strong> Auto mode classifier state</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">services/policyLimits/</span>
+                    <span class="module-path">src/services/policyLimits/</span>
+                </div>
+                <div class="module-desc">
+                    Organization-level policy restrictions (Enterprise feature)
+                </div>
+                <div class="module-features">
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Fetches policy from API (claude.ai or Console)</li>
+                        <li>Fail-open on errors (non-blocking)</li>
+                        <li>ETag-based caching (only re-fetch if changed)</li>
+                        <li>Background polling (1 hour interval)</li>
+                        <li>Per-feature restrictions (remote_control, web_search, etc.)</li>
+                    </ul>
+                    <strong>Policy Types:</strong>
+                    <ul>
+                        <li><code>allow_remote_control</code>: Bridge mode access</li>
+                        <li><code>allow_web_search</code>: WebSearchTool availability</li>
+                        <li><code>allowed_models</code>: Model allowlist</li>
+                        <li><code>max_token_usage</code>: Usage quotas</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">services/remoteManagedSettings/</span>
+                    <span class="module-path">src/services/remoteManagedSettings/</span>
+                </div>
+                <div class="module-desc">
+                    Remote configuration management (MDM-like for enterprises)
+                </div>
+                <div class="module-features">
+                    <strong>Capabilities:</strong>
+                    <ul>
+                        <li>Fetch settings from API (overrides local settings)</li>
+                        <li>Enforce organization-wide configurations</li>
+                        <li>Priority: Remote > Policy > MDM > User > Default</li>
+                        <li>Real-time updates via polling</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">utils/sandbox/</span>
+                    <span class="module-path">src/utils/sandbox/</span>
+                </div>
+                <div class="module-desc">
+                    Sandbox execution for Bash/PowerShell commands
+                </div>
+                <div class="module-features">
+                    <strong>Sandbox Backends:</strong>
+                    <ul>
+                        <li><strong>Bubblewrap (Linux):</strong> Lightweight namespace-based sandboxing</li>
+                        <li><strong>Docker (all platforms):</strong> Container-based isolation</li>
+                        <li><strong>Windows Sandbox:</strong> Windows-native isolation (planned)</li>
+                    </ul>
+                    <strong>Isolation Features:</strong>
+                    <ul>
+                        <li>Read-only system directories</li>
+                        <li>Writable workspace only</li>
+                        <li>Optional network isolation</li>
+                        <li>Resource limits (CPU, memory, PIDs)</li>
+                        <li>Timeout enforcement</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🤖 Auto Mode Classifier (Advanced)</h2>
+
+            <div class="info-box">
+                <strong>Auto Mode:</strong> Uses a separate LLM call to classify tool requests as safe/unsafe before auto-approving.
+            </div>
+
+            <div class="code-block">
+// utils/permissions/autoModeState.ts
+
+// Classifier prompt: "Is this Bash command safe to auto-execute?"
+const classifierPrompt = `
+You are a security classifier. Determine if this tool use is safe to auto-approve.
+
+Tool: ${toolName}
+Input: ${JSON.stringify(toolInput)}
+
+Rules:
+- Auto-approve: Read operations, safe git commands, npm install
+- Require approval: Write operations, rm/destructive commands, network access
+
+Respond with: SAFE or UNSAFE
+`;
+
+const classification = await llm.classify(classifierPrompt);
+if (classification === 'SAFE') {
+  // Auto-approve
+  return { approved: true, source: 'auto-classifier' };
+} else {
+  // Prompt user
+  return await showApprovalDialog(toolName, toolInput);
+}
+            </div>
+
+            <div class="warning-box">
+                <strong>Cost Consideration:</strong> Auto mode classifier makes an extra LLM call per tool use. Can be expensive for high-frequency tool usage.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🏢 Enterprise Governance Enhancements</h2>
+
+            <div class="enterprise-note">
+                <strong>Multi-Tenant Governance:</strong>
+                <p style="margin-top: 10px;">For enterprise systems, you'll need enhanced governance:</p>
+
+                <h4 style="margin-top: 15px;">1. RBAC (Role-Based Access Control)</h4>
+                <ul style="margin-left: 20px;">
+                    <li><strong>Roles:</strong> Admin, Developer, Analyst, Viewer</li>
+                    <li><strong>Permissions per role:</strong> Different tool access levels</li>
+                    <li><strong>Role inheritance:</strong> Admin inherits Developer permissions</li>
+                </ul>
+                <div class="code-block" style="margin-top: 10px;">
+// Enterprise RBAC
+const ROLE_PERMISSIONS = {
+  admin: ['*'],  // All tools
+  developer: ['Bash', 'Read', 'Write', 'Edit', 'Glob', 'Grep'],
+  analyst: ['Read', 'Glob', 'Grep', 'WebSearch'],
+  viewer: ['Read', 'Glob']
+};
+
+function hasToolPermission(userId: string, toolName: string): boolean {
+  const user = getUser(userId);
+  const allowedTools = ROLE_PERMISSIONS[user.role];
+  return allowedTools.includes('*') || allowedTools.includes(toolName);
+}
+                </div>
+
+                <h4 style="margin-top: 15px;">2. Org Hierarchies</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Parent org policies inherited by child orgs</li>
+                    <li>Child orgs can be more restrictive (not less)</li>
+                    <li>Policy conflict resolution</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">3. Audit Logging</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Log all permission decisions with user/org context</li>
+                    <li>Track permission denials for security monitoring</li>
+                    <li>Export audit logs for compliance (SOC2, ISO27001)</li>
+                </ul>
+                <div class="code-block" style="margin-top: 10px;">
+// Audit log entry
+{
+  timestamp: '2026-04-03T10:30:00Z',
+  userId: 'user_abc123',
+  orgId: 'org_xyz789',
+  sessionId: 'ses_def456',
+  decision: 'DENIED',
+  tool: 'Bash',
+  input: { command: 'rm -rf /' },
+  reason: 'dangerous_pattern_detected',
+  layer: 4,  // Which layer blocked it
+}
+                </div>
+
+                <h4 style="margin-top: 15px;">4. Custom Policies</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Per-org dangerous pattern lists</li>
+                    <li>Industry-specific restrictions (healthcare, finance)</li>
+                    <li>Data residency requirements</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">5. Compliance Reporting</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Export policy violations for SOC2/ISO27001</li>
+                    <li>Generate compliance reports (monthly, quarterly)</li>
+                    <li>Alert on high-risk activities</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">6. Break-Glass Access</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Emergency bypass with logging & approval</li>
+                    <li>Temporary elevated permissions</li>
+                    <li>Post-incident review workflow</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">7. Time-Based Policies</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Restrict certain features to business hours</li>
+                    <li>Weekend/holiday lockdowns for sensitive operations</li>
+                    <li>Maintenance windows with elevated permissions</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎬 Next Step</h2>
+            <div class="info-box">
+                <strong>Continue to:</strong> <a href="06_MULTI_AGENT.html">06 - Multi-Agent Orchestration</a> to learn about Coordinator mode, Team mode, and inter-agent communication patterns
+            </div>
+        </div>
+    </div>
+</body>
+</html>

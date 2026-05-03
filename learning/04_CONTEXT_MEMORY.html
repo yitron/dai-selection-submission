@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04 - Context & Memory Management</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .subtitle { font-size: 1.2em; opacity: 0.9; }
+        .nav-sequence {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-sequence h3 { color: #667eea; margin-bottom: 15px; }
+        .nav-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .nav-link {
+            padding: 12px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s;
+        }
+        .nav-link:hover { background: #e7f3ff; transform: translateX(5px); }
+        .nav-link.current { background: #667eea; color: white; font-weight: bold; }
+        .section {
+            background: white;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h3 { color: #764ba2; margin: 20px 0 15px 0; }
+        h4 { color: #1f2937; margin: 15px 0 10px 0; }
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .info-box {
+            background: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .warning-box {
+            background: #fff3e0;
+            padding: 15px;
+            border-left: 4px solid #ff9800;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .enterprise-note {
+            background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+            padding: 20px;
+            border-left: 5px solid #ec4899;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .flow-diagram {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .flow-step {
+            background: #e7f3ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        .arrow {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+        .module-box {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .module-name {
+            font-weight: 700;
+            font-size: 1.1em;
+            color: #1e40af;
+        }
+        .module-path {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            background: #e0e7ff;
+            padding: 4px 10px;
+            border-radius: 4px;
+            color: #3730a3;
+        }
+        .module-desc {
+            color: #4b5563;
+            margin-bottom: 12px;
+            line-height: 1.7;
+        }
+        .module-features {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 3px solid #60a5fa;
+        }
+        .module-features ul {
+            margin-left: 20px;
+        }
+        .module-features li {
+            margin-bottom: 6px;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 04 - Context & Memory Management</h1>
+            <p class="subtitle">Long-term Memory, File History, Context Injection</p>
+            <p style="margin-top: 10px;">MEMORY.md, CLAUDE.md, System Context, Conversation Compaction</p>
+        </header>
+
+        <div class="nav-sequence">
+            <h3>📖 Learning Path</h3>
+            <div class="nav-links">
+                <a href="01_OVERVIEW_AND_ENTRY_POINTS.html" class="nav-link">01 - Overview & Entry</a>
+                <a href="02_AGENT_LOOP.html" class="nav-link">02 - Agent Loop</a>
+                <a href="03_HARNESS_TOOLKIT.html" class="nav-link">03 - Toolkit</a>
+                <a href="04_CONTEXT_MEMORY.html" class="nav-link current">04 - Context & Memory</a>
+                <a href="05_GOVERNANCE.html" class="nav-link">05 - Governance</a>
+                <a href="06_MULTI_AGENT.html" class="nav-link">06 - Multi-Agent</a>
+                <a href="07_TELEMETRY_SESSIONS.html" class="nav-link">07 - Telemetry & Sessions</a>
+                <a href="08_GATEWAY_ARCHITECTURE.html" class="nav-link">08 - Gateway & Connections</a>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 What You'll Learn</h2>
+            <ul style="margin-left: 25px; line-height: 2;">
+                <li>Memory system layers (session, long-term, file history, system context)</li>
+                <li>MEMORY.md structure and management</li>
+                <li>Context injection pipeline (system prompt assembly)</li>
+                <li>Message compaction strategies</li>
+                <li>Enterprise memory adaptations for multi-user systems</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🏗️ Memory System Architecture</h2>
+
+            <div class="info-box">
+                <strong>Memory Layers in Claude Code:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Session Memory:</strong> Current conversation context (messages array)</li>
+                    <li><strong>Long-term Memory:</strong> MEMORY.md file with structured memories</li>
+                    <li><strong>File History:</strong> Recently accessed files for context</li>
+                    <li><strong>System Context:</strong> Git status, working directory, environment</li>
+                    <li><strong>CLAUDE.md:</strong> Project-specific instructions</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📁 Memory Directory (memdir/)</h2>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">memdir/</span>
+                    <span class="module-path">src/memdir/ (6 files)</span>
+                </div>
+                <div class="module-desc">
+                    Long-term memory system - manages MEMORY.md file with automatic/manual memory entries
+                </div>
+                <div class="module-features">
+                    <strong>Key Files:</strong>
+                    <ul>
+                        <li><strong>memdir.ts (21KB):</strong> Main memory API - read, write, search memories</li>
+                        <li><strong>memoryTypes.ts:</strong> Memory entry types (automatic vs manual)</li>
+                        <li><strong>findRelevantMemories.ts:</strong> Semantic search & retrieval</li>
+                        <li><strong>memoryAge.ts:</strong> Age-based memory pruning</li>
+                        <li><strong>memoryScan.ts:</strong> Batch memory operations</li>
+                        <li><strong>teamMemPaths.ts:</strong> Multi-agent memory isolation</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>MEMORY.md Structure</h3>
+
+            <div class="code-block">
+# MEMORY.md - Long-term memory storage
+
+## Automatic Memories (system-generated)
+- Last accessed: 2026-04-03
+- Project: intelliflow multi-agent system
+- Key files: src/agent_loop.py, src/telemetry.ts
+- Recent tasks: Implemented telemetry, fixed auth bug
+
+## Manual Memories (user-specified)
+- User preference: Always use TypeScript for new files
+- Project architecture: Multi-tenant SaaS with PostgreSQL
+- Deployment: Kubernetes on AWS EKS
+- Coding style: Prefer functional programming, avoid classes
+
+## Conversation Summaries
+- 2026-04-01: Implemented user authentication with OAuth2
+- 2026-04-02: Fixed database connection pooling issue
+- 2026-04-03: Added telemetry with OpenTelemetry
+            </div>
+
+            <div class="info-box">
+                <strong>Memory Types:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Automatic:</strong> System-generated from session activity (files accessed, tasks completed)</li>
+                    <li><strong>Manual:</strong> User-specified via /remember command or explicit requests</li>
+                    <li><strong>Conversation Summaries:</strong> Auto-generated summaries of past sessions</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📜 File History Tracking</h2>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">utils/fileHistory.ts</span>
+                    <span class="module-path">src/utils/fileHistory.ts</span>
+                </div>
+                <div class="module-desc">
+                    Tracks recently accessed files for context injection
+                </div>
+                <div class="module-features">
+                    <strong>Mechanism:</strong>
+                    <ul>
+                        <li>Maintains LRU (Least Recently Used) cache of file paths</li>
+                        <li>Automatically adds to system context when file count < threshold</li>
+                        <li>Used for prompt caching optimization</li>
+                        <li>Persisted per session</li>
+                        <li>Helps LLM understand which files are relevant</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="code-block">
+// File history tracking
+class FileHistory {
+  private recentFiles: string[] = [];
+  private maxSize = 20;
+
+  addFile(path: string) {
+    // Remove if already exists (move to front)
+    this.recentFiles = this.recentFiles.filter(f => f !== path);
+
+    // Add to front
+    this.recentFiles.unshift(path);
+
+    // Trim to max size
+    if (this.recentFiles.length > this.maxSize) {
+      this.recentFiles = this.recentFiles.slice(0, this.maxSize);
+    }
+  }
+
+  getRecentFiles(): string[] {
+    return this.recentFiles;
+  }
+}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🌍 System Context Gathering</h2>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">context.ts</span>
+                    <span class="module-path">src/context.ts</span>
+                </div>
+                <div class="module-desc">
+                    System context gathering - git status, directory structure, environment info
+                </div>
+                <div class="module-features">
+                    <strong>Context Types:</strong>
+                    <ul>
+                        <li><strong>getSystemContext():</strong> Git status, branch, worktree count, file count</li>
+                        <li><strong>getUserContext():</strong> User name, email (from git config)</li>
+                        <li><strong>getProjectContext():</strong> Project root, .gitignore, CLAUDE.md</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="code-block">
+// System context injected into every request
+<env>
+Working directory: /Users/user/project
+Is directory a git repo: Yes
+Platform: darwin
+OS Version: Darwin 24.1.0
+Today's date: 2026-04-03
+</env>
+
+gitStatus:
+Current branch: main
+Main branch (you will usually use this for PRs): main
+
+Status:
+(clean)
+
+Recent commits:
+abc1234 03 April 2026 - Add telemetry system
+def5678 02 April 2026 - Fix authentication bug
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔄 Context Injection Pipeline</h2>
+
+            <div class="flow-diagram">
+                <h3>System Prompt Assembly</h3>
+
+                <div class="flow-step">
+                    <strong>1. System Prompt Assembly</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// constants/prompts.ts - getSystemPrompt()
+export async function getSystemPrompt(
+  messages: Message[],
+  model: string
+): Promise<string[]> {
+  const sections: string[] = [];
+
+  // Core instructions
+  sections.push(CORE_INSTRUCTIONS);
+
+  // Environment info
+  sections.push(await getEnvironmentSection());
+
+  // Git status (if in repo)
+  if (await isGitRepo()) {
+    sections.push(await getGitStatusSection());
+  }
+
+  // CLAUDE.md (project instructions)
+  const claudeMd = await readClaudeMd();
+  if (claudeMd) {
+    sections.push(`# Project Instructions\n${claudeMd}`);
+  }
+
+  // Long-term memory
+  const memories = await findRelevantMemories(messages);
+  if (memories.length > 0) {
+    sections.push(formatMemoriesForPrompt(memories));
+  }
+
+  return sections;
+}
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>2. Message Compaction (if needed)</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// services/compact/ - Auto-compaction when token limit approached
+if (estimatedTokens > contextWindow * 0.8) {
+  // Keep: first message, last N messages, tool results
+  // Summarize: middle messages
+  const compacted = await compactMessages(messages);
+  return compacted;
+}
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>3. API Request</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+const request = {
+  model: 'claude-sonnet-4-5',
+  system: systemPrompt.join('\n'),
+  messages: messages,
+  tools: getTools(),
+  max_tokens: 4096,
+};
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📝 CLAUDE.md (Project Instructions)</h2>
+
+            <div class="info-box">
+                <strong>Purpose:</strong> Project-specific instructions that guide the agent's behavior for a particular codebase.
+            </div>
+
+            <div class="code-block">
+# CLAUDE.md - Project Instructions
+
+## Project Overview
+This is a multi-tenant SaaS application built with TypeScript, PostgreSQL, and Kubernetes.
+
+## Coding Standards
+- Always use TypeScript (never JavaScript)
+- Prefer functional programming over classes
+- Use async/await (avoid callbacks)
+- Write tests for all business logic
+
+## Architecture
+- Backend: Express.js API with PostgreSQL
+- Frontend: React with TypeScript
+- Deployment: Kubernetes on AWS EKS
+- CI/CD: GitHub Actions
+
+## Important Files
+- src/server.ts - Main entry point
+- src/routes/ - API endpoints
+- src/services/ - Business logic
+- src/models/ - Database models
+
+## Testing
+- Run tests: npm test
+- E2E tests: npm run test:e2e
+- Coverage: npm run coverage
+            </div>
+
+            <div class="warning-box">
+                <strong>Discovery:</strong> CLAUDE.md is automatically discovered in:
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Current working directory</li>
+                    <li>Git repository root</li>
+                    <li>Parent directories (up to 5 levels)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>♻️ Message Compaction</h2>
+
+            <div class="info-box">
+                <strong>Why Compaction?</strong> Long conversations exceed context windows. Compaction summarizes old messages to stay within limits.
+            </div>
+
+            <h3>Compaction Strategies</h3>
+
+            <div class="code-block">
+// services/compact/compactMessages.ts
+
+// Strategy 1: Keep Recent + Summarize Middle
+async function compactMessages(messages: Message[]): Promise<Message[]> {
+  // Always keep:
+  const keepFirst = messages[0];  // First user message
+  const keepLast = messages.slice(-10);  // Last 10 messages
+
+  // Summarize middle
+  const middleMessages = messages.slice(1, -10);
+  const summary = await summarizeMessages(middleMessages);
+
+  return [
+    keepFirst,
+    createAssistantMessage({ content: summary }),
+    ...keepLast
+  ];
+}
+
+// Strategy 2: Remove Tool Results (keep tool_use, remove results)
+// Strategy 3: Combine consecutive assistant messages
+// Strategy 4: Remove thinking blocks (if using extended thinking)
+            </div>
+
+            <h3>Manual Compaction</h3>
+
+            <div class="code-block">
+// User can manually trigger compaction
+User: /compact
+
+// System creates summary of conversation so far
+Assistant: I've compacted the conversation. Summary of previous discussion:
+- Implemented user authentication system
+- Fixed database connection pooling
+- Added telemetry with OpenTelemetry
+- Created learning path documentation
+
+You can continue from here.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🏢 Enterprise Memory Adaptations</h2>
+
+            <div class="enterprise-note">
+                <strong>Multi-User Memory System:</strong>
+                <p style="margin-top: 10px;">For enterprise systems, memory must be isolated and scaled:</p>
+
+                <h4 style="margin-top: 15px;">1. User-Scoped Memory</h4>
+                <ul style="margin-left: 20px;">
+                    <li><strong>Problem:</strong> MEMORY.md is per-project, not per-user</li>
+                    <li><strong>Solution:</strong> Store memories with user_id + project_id scope</li>
+                </ul>
+                <div class="code-block" style="margin-top: 10px;">
+// Enterprise memory storage
+memories/
+  user_abc123/
+    project_xyz789/
+      MEMORY.md
+    project_def456/
+      MEMORY.md
+                </div>
+
+                <h4 style="margin-top: 15px;">2. Org-Wide Knowledge Base</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Shared memory pool for entire organization</li>
+                    <li>Company-wide coding standards, architecture patterns</li>
+                    <li>Common troubleshooting knowledge</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">3. Vector Database for Memory</h4>
+                <ul style="margin-left: 20px;">
+                    <li><strong>Problem:</strong> File-based memory doesn't scale to thousands of users</li>
+                    <li><strong>Solution:</strong> Use pgvector, Pinecone, or Weaviate</li>
+                </ul>
+                <div class="code-block" style="margin-top: 10px;">
+// Vector database schema
+CREATE TABLE memories (
+  id UUID PRIMARY KEY,
+  user_id VARCHAR(255) NOT NULL,
+  org_id VARCHAR(255) NOT NULL,
+  project_id VARCHAR(255),
+  content TEXT NOT NULL,
+  embedding VECTOR(1536),  -- OpenAI ada-002
+  memory_type VARCHAR(50),  -- 'automatic' | 'manual' | 'summary'
+  created_at TIMESTAMP,
+  INDEX idx_user_org (user_id, org_id),
+  INDEX idx_embedding USING ivfflat (embedding vector_cosine_ops)
+);
+
+-- Semantic search
+SELECT content, 1 - (embedding <=> query_embedding) AS similarity
+FROM memories
+WHERE user_id = ? AND org_id = ?
+ORDER BY similarity DESC
+LIMIT 10;
+                </div>
+
+                <h4 style="margin-top: 15px;">4. Memory Access Control</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Hierarchical memory (personal → team → org)</li>
+                    <li>Role-based memory access (admin can see all org memories)</li>
+                    <li>Memory sharing permissions</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">5. Memory Versioning</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Track all memory changes for audit</li>
+                    <li>Rollback capability for corrupted memories</li>
+                    <li>Memory edit history</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">6. Cross-Session Memory</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Persist user memories across all sessions</li>
+                    <li>Automatically recall relevant memories from past projects</li>
+                    <li>Memory retention policies (expire after N days)</li>
+                </ul>
+
+                <div class="code-block" style="margin-top: 10px;">
+// Enterprise memory retrieval
+async function getRelevantMemories(
+  userId: string,
+  orgId: string,
+  query: string
+): Promise<Memory[]> {
+  // 1. Search personal memories
+  const personalMemories = await searchMemories({
+    userId,
+    scope: 'personal',
+    query,
+    limit: 5
+  });
+
+  // 2. Search team memories
+  const teamMemories = await searchMemories({
+    userId,
+    orgId,
+    scope: 'team',
+    query,
+    limit: 3
+  });
+
+  // 3. Search org memories
+  const orgMemories = await searchMemories({
+    orgId,
+    scope: 'org',
+    query,
+    limit: 2
+  });
+
+  // Combine and rank
+  return rankMemories([
+    ...personalMemories,
+    ...teamMemories,
+    ...orgMemories
+  ]);
+}
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎬 Next Step</h2>
+            <div class="info-box">
+                <strong>Continue to:</strong> <a href="05_GOVERNANCE.html">05 - Governance</a> to learn about multi-layer permissions, policies, security patterns, and sandbox execution
+            </div>
+        </div>
+    </div>
+</body>
+</html>

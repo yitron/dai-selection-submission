@@ -1,0 +1,2 @@
+[LLM Response]
+<Any text response from the LLM should appear here>

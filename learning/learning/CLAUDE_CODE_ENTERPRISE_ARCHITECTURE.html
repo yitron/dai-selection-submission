@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code → Enterprise Multi-User Architecture Mapping</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
+            color: white;
+            padding: 50px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            font-size: 1.3em;
+            opacity: 0.95;
+            margin-top: 10px;
+        }
+        .architecture-category {
+            background: white;
+            padding: 35px;
+            margin-bottom: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-left: 6px solid #3b82f6;
+        }
+        .category-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #e5e7eb;
+        }
+        .category-icon {
+            font-size: 3em;
+            margin-right: 20px;
+        }
+        .category-title {
+            flex: 1;
+        }
+        h2 {
+            color: #1e3a8a;
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+        .category-desc {
+            color: #6b7280;
+            font-size: 1.1em;
+        }
+        h3 {
+            color: #3b82f6;
+            margin: 25px 0 15px 0;
+            font-size: 1.5em;
+            border-left: 4px solid #3b82f6;
+            padding-left: 15px;
+        }
+        h4 {
+            color: #1f2937;
+            margin: 20px 0 12px 0;
+            font-size: 1.2em;
+        }
+        .module-box {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .module-name {
+            font-weight: 700;
+            font-size: 1.1em;
+            color: #1e40af;
+        }
+        .module-path {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            background: #e0e7ff;
+            padding: 4px 10px;
+            border-radius: 4px;
+            color: #3730a3;
+        }
+        .module-desc {
+            color: #4b5563;
+            margin-bottom: 12px;
+            line-height: 1.7;
+        }
+        .module-features {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 3px solid #60a5fa;
+        }
+        .module-features ul {
+            margin-left: 20px;
+        }
+        .module-features li {
+            margin-bottom: 6px;
+            color: #374151;
+        }
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            border: 2px solid #334155;
+        }
+        .highlight-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 20px;
+            border-left: 5px solid #f59e0b;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .info-box {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            padding: 20px;
+            border-left: 5px solid #3b82f6;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .warning-box {
+            background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+            padding: 20px;
+            border-left: 5px solid #f97316;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .success-box {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            padding: 20px;
+            border-left: 5px solid #10b981;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .flow-diagram {
+            background: white;
+            border: 3px solid #3b82f6;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .flow-step {
+            background: #f0f9ff;
+            padding: 18px;
+            margin: 12px 0;
+            border-radius: 6px;
+            border-left: 4px solid #0ea5e9;
+        }
+        .arrow {
+            text-align: center;
+            color: #3b82f6;
+            font-size: 2em;
+            margin: 8px 0;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background: #1e40af;
+            color: white;
+            font-weight: 600;
+        }
+        tr:hover {
+            background: #f9fafb;
+        }
+        .toc {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 2px solid #cbd5e1;
+        }
+        .toc h2 {
+            margin-bottom: 20px;
+        }
+        .toc ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        .toc li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+        .toc li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #3b82f6;
+            font-weight: bold;
+        }
+        .toc a {
+            color: #1e40af;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .toc a:hover {
+            text-decoration: underline;
+            color: #3b82f6;
+        }
+        code {
+            background: #f1f5f9;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #1e40af;
+        }
+        .enterprise-note {
+            background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+            padding: 20px;
+            border-left: 5px solid #ec4899;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        strong {
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏢 Claude Code → Enterprise Multi-User Architecture</h1>
+            <p class="subtitle">Mapping 1-to-1 CLI Agent to Enterprise Multi-Tenant System</p>
+            <p style="margin-top: 15px; font-size: 0.95em; opacity: 0.9;">
+                Source Analysis: /Users/hongzhuanglim/claude_code/claude-code-source-code-main
+            </p>
+        </header>
+
+        <div class="toc">
+            <h2>📋 Architecture Components</h2>
+            <ul>
+                <li><a href="#agent-loop">1. Agent Loop (Core Execution Cycle)</a></li>
+                <li><a href="#harness-toolkit">2. Harness Toolkit (Tool System & Execution)</a></li>
+                <li><a href="#context-memory">3. Context & Memory Management</a></li>
+                <li><a href="#governance">4. Governance (Permissions, Policies, Security)</a></li>
+                <li><a href="#multi-agent">5. Multi-Agent Orchestration</a></li>
+                <li><a href="#outside-agent">6. Outside Agent System (Telemetry, Sessions, Training)</a></li>
+            </ul>
+        </div>
+
+        <!-- AGENT LOOP -->
+        <div id="agent-loop" class="architecture-category">
+            <div class="category-header">
+                <div class="category-icon">🔄</div>
+                <div class="category-title">
+                    <h2>1. Agent Loop</h2>
+                    <p class="category-desc">The core execution cycle: User Input → LLM Processing → Tool Execution → Response</p>
+                </div>
+            </div>
+
+            <h3>Core Loop Architecture</h3>
+
+            <div class="flow-diagram">
+                <h4>Agent Execution Flow</h4>
+                <div class="flow-step">
+                    <strong>User Input</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// screens/REPL.tsx - Main conversation loop
+const handleUserMessage = async (userInput: string) => {
+  // 1. Create user message
+  const userMessage = createUserMessage(userInput);
+
+  // 2. Add to conversation history
+  updateAppState(state => ({
+    ...state,
+    messages: [...state.messages, userMessage]
+  }));
+
+  // 3. Start interaction span (telemetry)
+  const span = startInteractionSpan(userInput);
+
+  // 4. Process query
+  await processQuery(userMessage);
+};
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>Query Processing</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// query.ts - Main query processor (68KB file)
+export async function query(
+  messages: Message[],
+  options: QueryOptions
+): Promise<QueryResult> {
+  // 1. Prepare messages (compaction, context injection)
+  const preparedMessages = await prepareMessages(messages);
+
+  // 2. Create API request
+  const apiRequest = prepareApiRequest(preparedMessages, options);
+
+  // 3. Execute via QueryEngine
+  return await queryEngine.execute(apiRequest);
+}
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>LLM Request</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// QueryEngine.ts - API execution (46KB file)
+const response = await anthropic.messages.stream({
+  model: getMainLoopModel(),
+  messages: preparedMessages,
+  tools: getTools(),
+  max_tokens: 4096,
+  system: await getSystemPrompt(),
+});
+
+// Stream processing
+for await (const chunk of response) {
+  if (chunk.type === 'content_block_start') {
+    // Handle tool use or text
+  }
+}
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>Tool Execution</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Tool execution with permission checks
+if (chunk.type === 'tool_use') {
+  const tool = getTool(chunk.name);
+
+  // Permission check
+  const permitted = await checkToolPermission(tool, chunk.input);
+
+  if (permitted) {
+    const result = await tool.execute(chunk.input);
+    // Add tool result to message chain
+  }
+}
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>Response Assembly</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Create assistant message with tool results
+const assistantMessage = createAssistantMessage({
+  content: textBlocks,
+  tool_uses: toolUseBlocks,
+});
+
+// If tools were called, continue loop for tool results
+if (hasToolUses) {
+  return query([...messages, assistantMessage, ...toolResults]);
+}
+
+// Otherwise, return final response
+return { message: assistantMessage, stopReason: 'end_turn' };
+                    </div>
+                </div>
+            </div>
+
+            <h3>Key Module Breakdown</h3>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">screens/REPL.tsx</span>
+                    <span class="module-path">src/screens/REPL.tsx (~896KB)</span>
+                </div>
+                <div class="module-desc">
+                    Main interactive loop - renders UI, handles user input, manages conversation state
+                </div>
+                <div class="module-features">
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Text input handling with history (up/down arrows)</li>
+                        <li>Real-time streaming response display</li>
+                        <li>Tool execution progress indicators</li>
+                        <li>Permission approval dialogs</li>
+                        <li>Auto-mode toggle (Shift+Tab)</li>
+                        <li>Keyboard shortcuts (Ctrl+C for cancel, etc.)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">query.ts</span>
+                    <span class="module-path">src/query.ts (68KB)</span>
+                </div>
+                <div class="module-desc">
+                    Core query orchestrator - manages message preparation, API calls, tool coordination
+                </div>
+                <div class="module-features">
+                    <strong>Responsibilities:</strong>
+                    <ul>
+                        <li>Message compaction (auto/manual)</li>
+                        <li>Context injection (CLAUDE.md, system context)</li>
+                        <li>Token budget management</li>
+                        <li>Error recovery & retry logic</li>
+                        <li>Streaming response handling</li>
+                        <li>Tool result pairing (match tool_use with tool_result)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">QueryEngine.ts</span>
+                    <span class="module-path">src/QueryEngine.ts (46KB)</span>
+                </div>
+                <div class="module-desc">
+                    Low-level API execution engine - handles streaming, chunking, message assembly
+                </div>
+                <div class="module-features">
+                    <strong>Key Functions:</strong>
+                    <ul>
+                        <li>API request/response handling</li>
+                        <li>Stream event processing (content_block_start, content_block_delta, etc.)</li>
+                        <li>Tool use detection & extraction</li>
+                        <li>Rate limiting & throttling</li>
+                        <li>Cache hit detection (prompt caching)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="enterprise-note">
+                <strong>🏢 Enterprise Adaptation:</strong>
+                <p style="margin-top: 10px;">For multi-user systems, you'll need to:</p>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Isolate query state per user session (avoid shared global state)</li>
+                    <li>Implement user-level rate limiting in QueryEngine</li>
+                    <li>Add session affinity routing (route user to same agent instance)</li>
+                    <li>Implement request queueing for fairness across users</li>
+                    <li>Add circuit breakers for failing user sessions</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- HARNESS TOOLKIT -->
+        <div id="harness-toolkit" class="architecture-category">
+            <div class="category-header">
+                <div class="category-icon">🛠️</div>
+                <div class="category-title">
+                    <h2>2. Harness Toolkit</h2>
+                    <p class="category-desc">Tool system providing agent capabilities: file ops, bash, web search, agents, MCP</p>
+                </div>
+            </div>
+
+            <h3>Tool System Architecture</h3>
+
+            <div class="info-box">
+                <strong>Design Pattern:</strong> Claude Code implements tools as <strong>independent modules</strong> with a common interface. Each tool is responsible for:
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Input validation (Zod schemas)</li>
+                    <li>Permission checks</li>
+                    <li>Execution logic</li>
+                    <li>Result formatting</li>
+                    <li>Error handling</li>
+                </ul>
+            </div>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">Tool.ts</span>
+                    <span class="module-path">src/Tool.ts</span>
+                </div>
+                <div class="module-desc">
+                    Core tool type definitions and interfaces
+                </div>
+                <div class="module-features">
+                    <strong>Tool Interface:</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+export type Tool = {
+  name: string;
+  description: string;
+  input_schema: ToolInputJSONSchema;
+
+  // Execution
+  execute(input: unknown, context: ToolContext): Promise<ToolResult>;
+
+  // Permission checking
+  requiresApproval?: (input: unknown) => boolean;
+  getApprovalMessage?: (input: unknown) => string;
+
+  // Progress reporting
+  onProgress?: (data: ToolProgressData) => void;
+};
+
+export type ToolResult = {
+  content: ContentBlock[];
+  isError?: boolean;
+  metadata?: Record<string, unknown>;
+};
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">tools.ts</span>
+                    <span class="module-path">src/tools.ts</span>
+                </div>
+                <div class="module-desc">
+                    Tool registry and factory - assembles available tools based on permissions & features
+                </div>
+                <div class="module-features">
+                    <strong>Tool Categories:</strong>
+                    <ul>
+                        <li><strong>File Operations:</strong> Read, Write, Edit, Glob, Grep, NotebookEdit</li>
+                        <li><strong>Execution:</strong> Bash, PowerShell (Windows), Task (background processes)</li>
+                        <li><strong>Agent Spawn:</strong> AgentTool (spawn sub-agents), Skill (reusable prompts)</li>
+                        <li><strong>Web:</strong> WebFetch, WebSearch</li>
+                        <li><strong>MCP:</strong> Dynamic tools from MCP servers</li>
+                        <li><strong>Workflow:</strong> EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate</li>
+                        <li><strong>User Interaction:</strong> AskUserQuestion</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Core Tools Deep Dive</h3>
+
+            <table>
+                <tr>
+                    <th>Tool</th>
+                    <th>Path</th>
+                    <th>Purpose</th>
+                    <th>Key Features</th>
+                </tr>
+                <tr>
+                    <td><strong>BashTool</strong></td>
+                    <td>src/tools/BashTool/</td>
+                    <td>Execute shell commands</td>
+                    <td>
+                        • Sandbox mode (Bubblewrap/Docker)<br>
+                        • Background execution<br>
+                        • Timeout handling<br>
+                        • Git safety checks<br>
+                        • Dangerous command detection
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>FileReadTool</strong></td>
+                    <td>src/tools/FileReadTool/</td>
+                    <td>Read file contents</td>
+                    <td>
+                        • Line offset/limit<br>
+                        • Image reading (multimodal)<br>
+                        • PDF parsing<br>
+                        • Jupyter notebook support<br>
+                        • File existence validation
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>FileEditTool</strong></td>
+                    <td>src/tools/FileEditTool/</td>
+                    <td>Edit existing files</td>
+                    <td>
+                        • Exact string replacement<br>
+                        • Replace-all mode<br>
+                        • Indentation preservation<br>
+                        • Uniqueness validation<br>
+                        • Diff preview in IDE
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>AgentTool</strong></td>
+                    <td>src/tools/AgentTool/</td>
+                    <td>Spawn sub-agents</td>
+                    <td>
+                        • Agent type selection<br>
+                        • Isolated conversation context<br>
+                        • Turn limits<br>
+                        • Resume support<br>
+                        • Color assignment
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>MCPTools</strong></td>
+                    <td>src/services/mcp/</td>
+                    <td>Model Context Protocol tools</td>
+                    <td>
+                        • Dynamic tool discovery<br>
+                        • Server lifecycle management<br>
+                        • stdio/SSE transports<br>
+                        • OAuth integration<br>
+                        • Resource management
+                    </td>
+                </tr>
+            </table>
+
+            <h3>Tool Execution Pipeline</h3>
+
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <strong>1. Tool Discovery (API Response)</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// QueryEngine receives tool_use block from API
+{
+  type: 'tool_use',
+  id: 'toolu_01ABC',
+  name: 'BashTool',
+  input: { command: 'ls -la', description: 'List files' }
+}
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>2. Tool Lookup</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// tools.ts - getTools() registry
+const tool = getTools().find(t => t.name === 'BashTool');
+if (!tool) throw new Error('Tool not found');
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>3. Permission Check</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// hooks/toolPermission/useCanUseTool.tsx
+const permitted = await useCanUseTool(tool, input);
+// Shows approval dialog if needed
+// Checks bypass permissions mode
+// Validates against policy limits
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>4. Execution</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Tool.execute() with telemetry
+const startTime = Date.now();
+const span = startToolSpan(tool.name, input);
+
+try {
+  const result = await tool.execute(input, context);
+  logEvent('tengu_tool_use_completed', {
+    toolName: sanitizeToolNameForAnalytics(tool.name),
+    duration_ms: Date.now() - startTime,
+    is_error: false,
+  });
+  return result;
+} catch (error) {
+  logEvent('tengu_tool_use_failed', { ... });
+  throw error;
+} finally {
+  endToolSpan(span);
+}
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>5. Result Assembly</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Create tool_result message block
+const toolResult = {
+  type: 'tool_result',
+  tool_use_id: 'toolu_01ABC',
+  content: result.content,
+  is_error: result.isError,
+};
+
+// Add to conversation and continue loop
+messages.push(toolResult);
+return query(messages); // Recursive call
+                    </div>
+                </div>
+            </div>
+
+            <div class="enterprise-note">
+                <strong>🏢 Enterprise Toolkit Adaptations:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Tool Isolation:</strong> Run tools in user-specific containers/sandboxes</li>
+                    <li><strong>Resource Limits:</strong> CPU/memory/time limits per user/org</li>
+                    <li><strong>Tool Quotas:</strong> Track tool usage per user (e.g., max 100 Bash calls/hour)</li>
+                    <li><strong>Tool Allowlists:</strong> Per-org tool restrictions (disable BashTool for some orgs)</li>
+                    <li><strong>Audit Logging:</strong> Log all tool executions with user/org context for compliance</li>
+                    <li><strong>Tool Result Caching:</strong> Cache deterministic tool results (e.g., file reads) per user</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- CONTEXT & MEMORY -->
+        <div id="context-memory" class="architecture-category">
+            <div class="category-header">
+                <div class="category-icon">🧠</div>
+                <div class="category-title">
+                    <h2>3. Context & Memory Management</h2>
+                    <p class="category-desc">Long-term memory, conversation history, context injection, file tracking</p>
+                </div>
+            </div>
+
+            <h3>Memory System Architecture</h3>
+
+            <div class="info-box">
+                <strong>Memory Layers in Claude Code:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Session Memory:</strong> Current conversation context (messages array)</li>
+                    <li><strong>Long-term Memory:</strong> MEMORY.md file with structured memories</li>
+                    <li><strong>File History:</strong> Recently accessed files for context</li>
+                    <li><strong>System Context:</strong> Git status, working directory, environment</li>
+                    <li><strong>CLAUDE.md:</strong> Project-specific instructions</li>
+                </ul>
+            </div>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">memdir/</span>
+                    <span class="module-path">src/memdir/ (6 files)</span>
+                </div>
+                <div class="module-desc">
+                    Long-term memory system - manages MEMORY.md file with automatic/manual memory entries
+                </div>
+                <div class="module-features">
+                    <strong>Key Files:</strong>
+                    <ul>
+                        <li><strong>memdir.ts (21KB):</strong> Main memory API - read, write, search memories</li>
+                        <li><strong>memoryTypes.ts:</strong> Memory entry types (automatic vs manual)</li>
+                        <li><strong>findRelevantMemories.ts:</strong> Semantic search & retrieval</li>
+                        <li><strong>memoryAge.ts:</strong> Age-based memory pruning</li>
+                        <li><strong>memoryScan.ts:</strong> Batch memory operations</li>
+                        <li><strong>teamMemPaths.ts:</strong> Multi-agent memory isolation</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h4>MEMORY.md Structure</h4>
+
+            <div class="code-block">
+# MEMORY.md - Long-term memory storage
+
+## Automatic Memories (system-generated)
+- Last accessed: 2026-04-03
+- Project: intelliflow multi-agent system
+- Key files: src/agent_loop.py, src/telemetry.ts
+
+## Manual Memories (user-specified)
+- User preference: Always use TypeScript for new files
+- Project architecture: Multi-tenant SaaS with PostgreSQL
+- Deployment: Kubernetes on AWS EKS
+
+## Conversation Summaries
+- 2026-04-01: Implemented user authentication with OAuth2
+- 2026-04-02: Fixed database connection pooling issue
+            </div>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">utils/fileHistory.ts</span>
+                    <span class="module-path">src/utils/fileHistory.ts</span>
+                </div>
+                <div class="module-desc">
+                    Tracks recently accessed files for context injection
+                </div>
+                <div class="module-features">
+                    <strong>Mechanism:</strong>
+                    <ul>
+                        <li>Maintains LRU cache of file paths</li>
+                        <li>Automatically adds to system context when file count < threshold</li>
+                        <li>Used for prompt caching optimization</li>
+                        <li>Persisted per session</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">context.ts</span>
+                    <span class="module-path">src/context.ts</span>
+                </div>
+                <div class="module-desc">
+                    System context gathering - git status, directory structure, environment info
+                </div>
+                <div class="module-features">
+                    <strong>Context Types:</strong>
+                    <ul>
+                        <li><strong>getSystemContext():</strong> Git status, branch, worktree count, file count</li>
+                        <li><strong>getUserContext():</strong> User name, email (from git config)</li>
+                        <li><strong>getProjectContext():</strong> Project root, .gitignore, CLAUDE.md</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Context Injection Pipeline</h3>
+
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <strong>1. System Prompt Assembly</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// constants/prompts.ts - getSystemPrompt()
+export async function getSystemPrompt(
+  messages: Message[],
+  model: string
+): Promise<string[]> {
+  const sections: string[] = [];
+
+  // Core instructions
+  sections.push(CORE_INSTRUCTIONS);
+
+  // Environment info
+  sections.push(await getEnvironmentSection());
+
+  // Git status (if in repo)
+  if (await isGitRepo()) {
+    sections.push(await getGitStatusSection());
+  }
+
+  // CLAUDE.md (project instructions)
+  const claudeMd = await readClaudeMd();
+  if (claudeMd) {
+    sections.push(`# Project Instructions\n${claudeMd}`);
+  }
+
+  // Long-term memory
+  const memories = await findRelevantMemories(messages);
+  if (memories.length > 0) {
+    sections.push(formatMemoriesForPrompt(memories));
+  }
+
+  return sections;
+}
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>2. Message Compaction (if needed)</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// services/compact/ - Auto-compaction when token limit approached
+if (estimatedTokens > contextWindow * 0.8) {
+  // Keep: first message, last N messages, tool results
+  // Summarize: middle messages
+  const compacted = await compactMessages(messages);
+  return compacted;
+}
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>3. API Request</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+const request = {
+  model: 'claude-sonnet-4-5',
+  system: systemPrompt.join('\n'),
+  messages: messages,
+  tools: getTools(),
+  max_tokens: 4096,
+};
+                    </div>
+                </div>
+            </div>
+
+            <div class="enterprise-note">
+                <strong>🏢 Enterprise Memory Adaptations:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>User-Scoped Memory:</strong> MEMORY.md per user (not per project)</li>
+                    <li><strong>Org-Wide Knowledge Base:</strong> Shared memory pool for organization</li>
+                    <li><strong>Vector Database:</strong> Replace file-based memory with pgvector/Pinecone</li>
+                    <li><strong>Memory Access Control:</strong> Hierarchical memory (personal → team → org)</li>
+                    <li><strong>Memory Versioning:</strong> Track memory changes for audit/rollback</li>
+                    <li><strong>Cross-Session Memory:</strong> Persist memories across sessions per user</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section" style="background: #f0f9ff; border: 2px dashed #3b82f6;">
+            <h2>📄 Document Progress</h2>
+            <p><strong>Completed Sections:</strong></p>
+            <ul style="margin-left: 25px; margin-top: 10px;">
+                <li>✅ 1. Agent Loop</li>
+                <li>✅ 2. Harness Toolkit</li>
+                <li>✅ 3. Context & Memory Management</li>
+            </ul>
+            <p style="margin-top: 15px;"><strong>Next Sections:</strong></p>
+            <ul style="margin-left: 25px; margin-top: 10px;">
+                <li>⏳ 4. Governance (Permissions, Policies, Security)</li>
+                <li>⏳ 5. Multi-Agent Orchestration</li>
+                <li>⏳ 6. Outside Agent System (Telemetry, Sessions, Training)</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

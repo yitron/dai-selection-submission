@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Architecture Analysis - Enterprise Multi-User Perspective</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .section {
+            background: white;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        h3 {
+            color: #764ba2;
+            margin: 20px 0 15px 0;
+            font-size: 1.4em;
+        }
+        h4 {
+            color: #555;
+            margin: 15px 0 10px 0;
+            font-size: 1.1em;
+        }
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .info-box {
+            background: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .warning-box {
+            background: #fff3e0;
+            padding: 15px;
+            border-left: 4px solid #ff9800;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .success-box {
+            background: #e8f5e9;
+            padding: 15px;
+            border-left: 4px solid #4caf50;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        tr:hover {
+            background: #f5f5f5;
+        }
+        .flow-diagram {
+            background: white;
+            border: 2px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .flow-step {
+            background: #e7f3ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        .arrow {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+        ul, ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .toc {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .toc ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        .toc li {
+            margin-bottom: 5px;
+        }
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Claude Code Architecture Analysis</h1>
+            <p class="subtitle">Deep Dive for Enterprise Multi-User Implementation</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">Source: /Users/hongzhuanglim/claude_code/claude-code-source-code-main</p>
+        </header>
+
+        <div class="toc section">
+            <h2>Table of Contents</h2>
+            <ul>
+                <li><a href="#overview">1. Architecture Overview</a></li>
+                <li><a href="#entry-flow">2. Entry Point & Program Flow (main.tsx)</a></li>
+                <li><a href="#telemetry">3. Telemetry System (Critical for Multi-User)</a></li>
+                <li><a href="#session-control">4. Session Control & State Management</a></li>
+                <li><a href="#modules">5. Module-by-Module Breakdown</a></li>
+                <li><a href="#routing">6. Routing & Multi-Agent Architecture</a></li>
+                <li><a href="#state-transitions">7. State Transitions & Event Handling</a></li>
+                <li><a href="#enterprise-considerations">8. Enterprise Multi-User Considerations</a></li>
+            </ul>
+        </div>
+
+        <div id="overview" class="section">
+            <h2>1. Architecture Overview</h2>
+
+            <div class="info-box">
+                <strong>Key Insight:</strong> Claude Code is built as a <strong>single-user, single-session CLI tool</strong> with sophisticated session management, telemetry, and state isolation. For your multi-user enterprise system, you'll need to replicate these patterns but with multi-tenancy awareness.
+            </div>
+
+            <h3>Core Architecture Pattern</h3>
+            <p>Claude Code uses a <strong>centralized state + distributed execution</strong> model:</p>
+
+            <ul>
+                <li><strong>Bootstrap State</strong> (src/bootstrap/state.ts): Singleton global state - session ID, telemetry, counters</li>
+                <li><strong>App State</strong> (src/state/): React-based UI state - messages, tasks, permissions</li>
+                <li><strong>Services Layer</strong>: Analytics, MCP, API clients, policy limits</li>
+                <li><strong>Tools Layer</strong>: Execution interface (Bash, File ops, Agents, MCP tools)</li>
+                <li><strong>UI Layer</strong>: Ink-based terminal rendering (React reconciler for CLI)</li>
+            </ul>
+
+            <div class="flow-diagram">
+                <h4>High-Level Data Flow</h4>
+                <div class="flow-step">
+                    <strong>1. Entry:</strong> cli.tsx → main.tsx → init.ts (bootstrap telemetry, auth, settings)
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <strong>2. Session Init:</strong> Generate SessionID → Setup telemetry sinks → Load policies
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <strong>3. UI Render:</strong> REPL.tsx (main loop) → Components (input, history, status)
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <strong>4. Query Processing:</strong> User input → query.ts → QueryEngine → API calls → Tool execution
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <strong>5. Telemetry:</strong> Every action logs to OpenTelemetry (metrics, traces, logs) → Exporters (OTLP, Datadog, BigQuery)
+                </div>
+            </div>
+        </div>
+
+        <div id="entry-flow" class="section">
+            <h2>2. Entry Point & Program Flow (main.tsx)</h2>
+
+            <h3>2.1 Entry Point: cli.tsx</h3>
+            <p><strong>Location:</strong> <code>src/entrypoints/cli.tsx</code> (27,674 tokens, ~40KB)</p>
+
+            <div class="info-box">
+                <strong>Purpose:</strong> Bootstrap entry point with fast-path optimizations for special flags before loading the full application.
+            </div>
+
+            <h4>Fast Paths (Zero/Minimal Imports):</h4>
+            <div class="code-block">
+// cli.tsx execution flow
+async function main() {
+  const args = process.argv.slice(2);
+
+  // FAST PATH 1: --version (zero module loading)
+  if (args[0] === '--version') {
+    console.log(`${MACRO.VERSION} (Claude Code)`);
+    return;
+  }
+
+  // FAST PATH 2: --dump-system-prompt (ant-only)
+  if (args[0] === '--dump-system-prompt') {
+    // Dynamic imports to avoid loading full app
+    const { getSystemPrompt } = await import('../constants/prompts.js');
+    console.log(prompt.join('\n'));
+    return;
+  }
+
+  // FAST PATH 3: Bridge mode (IDE extension)
+  if (args[0] === 'remote-control' || args[0] === 'bridge') {
+    const { bridgeMain } = await import('../bridge/bridgeMain.js');
+    await bridgeMain(args.slice(1));
+    return;
+  }
+
+  // FAST PATH 4: Daemon mode (long-running supervisor)
+  if (args[0] === 'daemon') {
+    const { daemonMain } = await import('../daemon/main.js');
+    await daemonMain(args.slice(1));
+    return;
+  }
+
+  // FAST PATH 5: Background sessions (ps, logs, attach, kill)
+  if (args[0] === 'ps' || args[0] === 'logs' || ...) {
+    const bg = await import('../cli/bg.js');
+    await bg.psHandler(args.slice(1));
+    return;
+  }
+
+  // DEFAULT: Load main.tsx
+  const { main: mainFunction } = await import('../main.js');
+  await mainFunction();
+}
+            </div>
+
+            <h3>2.2 Main Application Flow: main.tsx</h3>
+            <p><strong>Location:</strong> <code>src/main.tsx</code> (4,684 lines)</p>
+
+            <div class="highlight">
+                <strong>THIS IS THE REAL ENTRY POINT</strong> - main.tsx orchestrates the entire application lifecycle for interactive sessions.
+            </div>
+
+            <h4>Execution Phases:</h4>
+
+            <table>
+                <tr>
+                    <th>Phase</th>
+                    <th>Function</th>
+                    <th>Purpose</th>
+                    <th>Line Range</th>
+                </tr>
+                <tr>
+                    <td>1. Pre-Init</td>
+                    <td>eagerLoadSettings()</td>
+                    <td>Parse --settings flag early, load MDM settings</td>
+                    <td>502-516</td>
+                </tr>
+                <tr>
+                    <td>2. Init</td>
+                    <td>init()</td>
+                    <td>Bootstrap telemetry, auth, network config, plugin system</td>
+                    <td>From entrypoints/init.ts</td>
+                </tr>
+                <tr>
+                    <td>3. Migrations</td>
+                    <td>runMigrations()</td>
+                    <td>Version-based settings migrations</td>
+                    <td>326-352</td>
+                </tr>
+                <tr>
+                    <td>4. Telemetry Init</td>
+                    <td>initializeTelemetryAfterTrust()</td>
+                    <td>Setup OpenTelemetry providers (traces, metrics, logs)</td>
+                    <td>Called after trust dialog</td>
+                </tr>
+                <tr>
+                    <td>5. Session Creation</td>
+                    <td>generateSessionId()</td>
+                    <td>Create unique session ID, setup session state</td>
+                    <td>bootstrap/state.ts</td>
+                </tr>
+                <tr>
+                    <td>6. UI Render</td>
+                    <td>renderAndRun(REPL)</td>
+                    <td>Launch Ink renderer with REPL component</td>
+                    <td>Main conversation loop</td>
+                </tr>
+                <tr>
+                    <td>7. Deferred Prefetch</td>
+                    <td>startDeferredPrefetches()</td>
+                    <td>Background tasks (user context, tips, file counting)</td>
+                    <td>388-431</td>
+                </tr>
+            </table>
+        </div>
+
+        <div id="telemetry" class="section">
+            <h2>3. Telemetry System (Critical for Multi-User)</h2>
+
+            <div class="warning-box">
+                <strong>⚠️ Enterprise Critical:</strong> The telemetry system is your key to monitoring, training, and debugging multi-user sessions. Claude Code implements OpenTelemetry (OTEL) with three signals: <strong>Metrics</strong>, <strong>Traces</strong>, and <strong>Logs</strong>.
+            </div>
+
+            <h3>3.1 Telemetry Architecture</h3>
+
+            <div class="flow-diagram">
+                <h4>Telemetry Data Flow</h4>
+                <div class="flow-step">
+                    <strong>Event Source:</strong> Tool execution, API calls, user interactions, errors
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <strong>Analytics API:</strong> logEvent() / logEventAsync() (src/services/analytics/index.ts)
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <strong>Sink Router:</strong> attachAnalyticsSink() → Routes to multiple backends
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <strong>Exporters:</strong>
+                    <ul style="margin-top: 10px;">
+                        <li>Datadog (metrics/traces)</li>
+                        <li>BigQuery (first-party events)</li>
+                        <li>OTLP (OpenTelemetry Protocol)</li>
+                        <li>Console (debugging)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>3.2 Key Telemetry Files</h3>
+
+            <table>
+                <tr>
+                    <th>File</th>
+                    <th>Purpose</th>
+                    <th>Key Functions</th>
+                </tr>
+                <tr>
+                    <td>services/analytics/index.ts</td>
+                    <td>Public API for event logging</td>
+                    <td>logEvent(), logEventAsync(), attachAnalyticsSink()</td>
+                </tr>
+                <tr>
+                    <td>services/analytics/metadata.ts</td>
+                    <td>Event enrichment with session/user context</td>
+                    <td>sanitizeToolNameForAnalytics(), mcpToolDetailsForAnalytics()</td>
+                </tr>
+                <tr>
+                    <td>services/analytics/sink.ts</td>
+                    <td>Routes events to multiple backends</td>
+                    <td>Datadog fanout, PII stripping</td>
+                </tr>
+                <tr>
+                    <td>services/analytics/growthbook.ts</td>
+                    <td>Feature flags and A/B testing</td>
+                    <td>initializeGrowthBook(), getFeatureValue()</td>
+                </tr>
+                <tr>
+                    <td>utils/telemetry/instrumentation.ts</td>
+                    <td>OpenTelemetry provider setup</td>
+                    <td>initializeTelemetry(), bootstrapTelemetry()</td>
+                </tr>
+                <tr>
+                    <td>utils/telemetry/sessionTracing.ts</td>
+                    <td>Span management for tracing</td>
+                    <td>startInteractionSpan(), startLLMRequestSpan(), startToolSpan()</td>
+                </tr>
+                <tr>
+                    <td>utils/telemetry/perfettoTracing.ts</td>
+                    <td>Perfetto format traces (UI visualization)</td>
+                    <td>Chrome tracing format for profiling</td>
+                </tr>
+            </table>
+
+            <h3>3.3 Telemetry Initialization Flow</h3>
+
+            <div class="code-block">
+// entrypoints/init.ts - initializeTelemetryAfterTrust()
+
+export async function initializeTelemetryAfterTrust() {
+  // 1. Bootstrap OpenTelemetry env vars
+  bootstrapTelemetry();
+
+  // 2. Initialize providers (Meter, Logger, Tracer)
+  const { initializeTelemetry } = await import(
+    '../utils/telemetry/instrumentation.js'
+  );
+  await initializeTelemetry();
+
+  // 3. Setup session metrics counters
+  const meter = getMeter();
+  if (meter) {
+    const sessionCounter = meter.createCounter('session_count');
+    const costCounter = meter.createCounter('total_cost_usd');
+    const tokenCounter = meter.createCounter('token_usage');
+    // Store in bootstrap/state.ts
+    setMeter(meter);
+  }
+
+  // 4. Attach analytics sink (Datadog, BigQuery)
+  const { attachAnalyticsSink } = await import(
+    '../services/analytics/index.js'
+  );
+  const { createAnalyticsSink } = await import(
+    '../services/analytics/sink.js'
+  );
+  attachAnalyticsSink(createAnalyticsSink());
+
+  // 5. Initialize GrowthBook for feature flags
+  await initializeGrowthBook();
+}
+            </div>
+
+            <h3>3.4 Session Tracing (OpenTelemetry Spans)</h3>
+
+            <div class="info-box">
+                <strong>Span Hierarchy:</strong> Claude Code uses a hierarchical span model to trace the full lifecycle of a user interaction.
+            </div>
+
+            <div class="code-block">
+// utils/telemetry/sessionTracing.ts
+
+// Span Types:
+// 1. interaction       - User prompt → Claude response (root span)
+// 2. llm_request       - Single API call to Claude
+// 3. tool              - Tool execution (Bash, Read, Write, etc.)
+// 4. tool.blocked_on_user - Waiting for user approval
+// 5. tool.execution    - Actual tool execution time
+// 6. hook              - Hook execution (pre/post tool)
+
+// Example usage:
+export function startInteractionSpan(userPrompt: string): Span {
+  const tracer = trace.getTracer('com.anthropic.claude_code.tracing');
+
+  const span = tracer.startSpan('interaction', {
+    attributes: {
+      'span.type': 'interaction',
+      'user.prompt': truncateContent(userPrompt, 1000),
+      'session.id': getSessionId(),
+      'session.model': getMainLoopModel(),
+      // ... base telemetry attributes
+    }
+  });
+
+  // Store in AsyncLocalStorage for nested spans
+  interactionContext.enterWith({ span, startTime: Date.now() });
+
+  // Also create Perfetto span for Chrome trace viewer
+  if (isPerfettoTracingEnabled()) {
+    startInteractionPerfettoSpan(userPrompt);
+  }
+
+  return span;
+}
+
+export function startLLMRequestSpan(messages: APIMessage[]): Span {
+  const parentSpan = interactionContext.getStore()?.span;
+  const tracer = trace.getTracer('com.anthropic.claude_code.tracing');
+
+  return tracer.startSpan('llm_request', {
+    attributes: {
+      'span.type': 'llm_request',
+      'llm.request.message_count': messages.length,
+      'llm.request.model': getMainLoopModel(),
+      // ... PII-safe attributes only
+    }
+  }, otelContext.active());
+}
+            </div>
+
+            <h3>3.5 Event Logging Patterns</h3>
+
+            <div class="code-block">
+// services/analytics/index.ts - Core event logging
+
+// Event naming convention: tengu_*
+// Metadata must be PII-safe (no code, file paths, user data)
+
+logEvent('tengu_startup_telemetry', {
+  is_git: true,
+  worktree_count: 2,
+  gh_auth_status: 'authenticated',
+  sandbox_enabled: true,
+});
+
+logEvent('tengu_api_success', {
+  model: 'claude-sonnet-4-5',
+  input_tokens: 12543,
+  output_tokens: 892,
+  cache_hit: true,
+  stop_reason: 'end_turn',
+  duration_ms: 3421,
+});
+
+logEvent('tengu_tool_use_started', {
+  toolName: sanitizeToolNameForAnalytics('BashTool'), // MCP tools redacted
+  is_mcp_tool: false,
+  requires_approval: true,
+});
+
+// Async logging for non-critical events
+await logEventAsync('tengu_session_end', {
+  duration_seconds: sessionDuration,
+  total_cost_usd: totalCost,
+  message_count: messageCount,
+});
+            </div>
+
+            <h3>3.6 PII Protection</h3>
+
+            <div class="warning-box">
+                <strong>Security Pattern:</strong> All telemetry uses type markers to enforce PII safety:
+                <ul style="margin-top: 10px;">
+                    <li><code>AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS</code> - General analytics</li>
+                    <li><code>AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED</code> - Routed to PII-safe storage (BigQuery with access controls)</li>
+                </ul>
+            </div>
+
+            <div class="code-block">
+// services/analytics/index.ts
+
+export type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS = never;
+
+// Forces explicit type casting - developer must verify safety
+logEvent('event_name', {
+  tool_name: sanitizedName as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,
+  // NOT ALLOWED: user_input: rawInput (would be PII)
+});
+
+// PII-tagged values use _PROTO_ prefix and route to protected storage
+logEvent('event_name', {
+  _PROTO_user_id: userId as AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED,
+  _PROTO_org_id: orgId as AnalyticsMetadata_I_VERIFIED_THIS_IS_PII_TAGGED,
+});
+            </div>
+        </div>
+
+        <div id="session-control" class="section">
+            <h2>4. Session Control & State Management</h2>
+
+            <div class="success-box">
+                <strong>✅ Enterprise Pattern:</strong> Claude Code's session management is battle-tested for isolation, persistence, and recovery. This is your blueprint for multi-user session control.
+            </div>
+
+            <h3>4.1 Session State Architecture</h3>
+
+            <p>Claude Code uses a <strong>two-tier state model</strong>:</p>
+
+            <table>
+                <tr>
+                    <th>State Layer</th>
+                    <th>Location</th>
+                    <th>Scope</th>
+                    <th>Persistence</th>
+                </tr>
+                <tr>
+                    <td><strong>Bootstrap State</strong></td>
+                    <td>src/bootstrap/state.ts (1,760 lines)</td>
+                    <td>Global session metadata</td>
+                    <td>In-memory only</td>
+                </tr>
+                <tr>
+                    <td><strong>App State</strong></td>
+                    <td>src/state/AppStateStore.ts</td>
+                    <td>UI/conversation state</td>
+                    <td>Saved to .jsonl files</td>
+                </tr>
+            </table>
+
+            <h3>4.2 Bootstrap State (Global Session State)</h3>
+
+            <div class="info-box">
+                <strong>Design Pattern:</strong> bootstrap/state.ts is a <strong>leaf module</strong> with zero internal imports to prevent circular dependencies. It's imported by nearly every other module.
+            </div>
+
+            <div class="code-block">
+// src/bootstrap/state.ts - Session state structure
+
+type State = {
+  // Session Identity
+  sessionId: SessionId;                    // Unique UUID per session
+  parentSessionId: SessionId | undefined;  // For session lineage (plan → impl)
+  originalCwd: string;                     // Working directory at start
+  projectRoot: string;                     // Stable project root
+
+  // Cost & Usage Tracking
+  totalCostUSD: number;
+  totalAPIDuration: number;
+  totalToolDuration: number;
+  modelUsage: { [modelName: string]: ModelUsage };
+
+  // Telemetry Providers (OpenTelemetry)
+  meter: Meter | null;
+  sessionCounter: AttributedCounter | null;
+  locCounter: AttributedCounter | null;
+  costCounter: AttributedCounter | null;
+  tokenCounter: AttributedCounter | null;
+  loggerProvider: LoggerProvider | null;
+  eventLogger: ReturnType<typeof logs.getLogger> | null;
+  meterProvider: MeterProvider | null;
+  tracerProvider: BasicTracerProvider | null;
+
+  // Session Configuration
+  isInteractive: boolean;
+  clientType: string;                      // 'cli', 'sdk-cli', 'local-agent', 'mcp'
+  sessionSource: string | undefined;
+  sessionPersistenceDisabled: boolean;
+
+  // Security & Permissions
+  sessionBypassPermissionsMode: boolean;
+  sessionTrustAccepted: boolean;
+
+  // Caching & Optimization
+  cachedClaudeMdContent: string | null;
+  systemPromptSectionCache: Map<string, string | null>;
+  promptCache1hEligible: boolean | null;
+
+  // Multi-Agent State
+  agentColorMap: Map<string, AgentColorName>;
+  sessionCreatedTeams: Set<string>;
+
+  // Debugging & Diagnostics
+  inMemoryErrorLog: Array<{ error: string; timestamp: string }>;
+  slowOperations: Array<{ operation: string; durationMs: number }>;
+  lastAPIRequest: Omit<BetaMessageStreamParams, 'messages'> | null;
+};
+            </div>
+
+            <h3>4.3 Session Lifecycle</h3>
+
+            <div class="flow-diagram">
+                <h4>Session Creation & Management</h4>
+                <div class="flow-step">
+                    <strong>1. Session ID Generation</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// bootstrap/state.ts
+export function regenerateSessionId(): SessionId {
+  const newId = asSessionId(randomUUID());
+  STATE.sessionId = newId;
+  sessionSwitched.emit(newId);
+  return newId;
+}
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <strong>2. Session Registration</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// utils/concurrentSessions.ts
+registerSession(sessionId, {
+  projectRoot: getCwd(),
+  model: getMainLoopModel(),
+  startTime: Date.now(),
+  clientType: getClientType(),
+});
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <strong>3. Telemetry Attachment</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Create session-specific counters
+const sessionCounter = meter.createCounter('session_count', {
+  attributes: {
+    session_id: sessionId,
+    model: getMainLoopModel(),
+  }
+});
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <strong>4. Session Persistence Setup</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Session log file: ~/.claude/sessions/{sessionId}.jsonl
+// Each message/event appended as JSON line
+// Format: { type: 'message', content: {...}, timestamp: ... }
+                    </div>
+                </div>
+            </div>
+
+            <h3>4.4 Session Storage & Persistence</h3>
+
+            <div class="code-block">
+// utils/sessionStorage.ts
+
+// Session directory: ~/.claude/sessions/
+// Files per session:
+// - {sessionId}.jsonl         - Main conversation log
+// - {sessionId}.metadata.json - Session metadata
+// - {sessionId}.title         - Human-readable title
+
+export async function saveMessageToSession(
+  sessionId: SessionId,
+  message: MessageType
+): Promise<void> {
+  const sessionPath = getSessionLogPath(sessionId);
+  const entry = {
+    type: 'message',
+    role: message.role,
+    content: message.content,
+    timestamp: Date.now(),
+  };
+
+  // Append to JSONL (newline-delimited JSON)
+  await appendFile(sessionPath, JSON.stringify(entry) + '\n');
+}
+
+export async function loadTranscriptFromFile(
+  sessionId: SessionId
+): Promise<MessageType[]> {
+  const sessionPath = getSessionLogPath(sessionId);
+  const lines = (await readFile(sessionPath, 'utf-8')).split('\n');
+
+  return lines
+    .filter(line => line.trim())
+    .map(line => JSON.parse(line))
+    .filter(entry => entry.type === 'message')
+    .map(entry => ({
+      role: entry.role,
+      content: entry.content,
+    }));
+}
+            </div>
+
+            <h3>4.5 Concurrent Session Management</h3>
+
+            <div class="warning-box">
+                <strong>⚠️ Single-User Limitation:</strong> Claude Code supports <strong>multiple concurrent sessions per user</strong> but lacks multi-tenant isolation. For enterprise, you'll need to add:
+                <ul style="margin-top: 10px;">
+                    <li>User/Organization ID to session metadata</li>
+                    <li>Session isolation enforcement (prevent cross-user access)</li>
+                    <li>Resource quotas per user/org</li>
+                    <li>Session affinity (route user to their sessions)</li>
+                </ul>
+            </div>
+
+            <div class="code-block">
+// utils/concurrentSessions.ts - Session registry
+
+const activeSessions = new Map<SessionId, SessionMetadata>();
+
+export function registerSession(
+  sessionId: SessionId,
+  metadata: SessionMetadata
+): void {
+  activeSessions.set(sessionId, {
+    ...metadata,
+    registeredAt: Date.now(),
+  });
+}
+
+export function countConcurrentSessions(): number {
+  return activeSessions.size;
+}
+
+// For enterprise multi-user, extend to:
+export function getSessionsByUser(userId: string): SessionId[] {
+  return Array.from(activeSessions.entries())
+    .filter(([_, meta]) => meta.userId === userId)
+    .map(([id, _]) => id);
+}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Document Status</h2>
+            <p><strong>Part 1 of 4 Complete:</strong> Core architecture, telemetry, and session control</p>
+            <p><strong>Next sections:</strong></p>
+            <ul>
+                <li>Module-by-module breakdown (45+ modules)</li>
+                <li>Routing & multi-agent architecture</li>
+                <li>State transitions & event handling</li>
+                <li>Enterprise multi-user considerations & diagrams</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

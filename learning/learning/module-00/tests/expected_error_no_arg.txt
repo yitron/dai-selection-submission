@@ -1,0 +1,2 @@
+Error: Please provide a question as an argument
+Usage: python hello_llm.py "your question here"

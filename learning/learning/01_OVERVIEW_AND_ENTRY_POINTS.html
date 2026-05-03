@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>01 - Claude Code Overview & Entry Points</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .subtitle { font-size: 1.2em; opacity: 0.9; }
+        .nav-sequence {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-sequence h3 { color: #667eea; margin-bottom: 15px; }
+        .nav-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .nav-link {
+            padding: 12px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s;
+        }
+        .nav-link:hover { background: #e7f3ff; transform: translateX(5px); }
+        .nav-link.current { background: #667eea; color: white; font-weight: bold; }
+        .section {
+            background: white;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h3 { color: #764ba2; margin: 20px 0 15px 0; }
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+        .info-box {
+            background: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .warning-box {
+            background: #fff3e0;
+            padding: 15px;
+            border-left: 4px solid #ff9800;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #667eea;
+            color: white;
+        }
+        .flow-diagram {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .flow-step {
+            background: #e7f3ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        .arrow {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 01 - Architecture Overview & Entry Points</h1>
+            <p class="subtitle">Understanding Claude Code's Foundation</p>
+            <p style="margin-top: 10px;">Learn how the application boots, initializes, and routes to different modes</p>
+        </header>
+
+        <div class="nav-sequence">
+            <h3>📖 Learning Path</h3>
+            <div class="nav-links">
+                <a href="01_OVERVIEW_AND_ENTRY_POINTS.html" class="nav-link current">01 - Overview & Entry</a>
+                <a href="02_AGENT_LOOP.html" class="nav-link">02 - Agent Loop</a>
+                <a href="03_HARNESS_TOOLKIT.html" class="nav-link">03 - Toolkit</a>
+                <a href="04_CONTEXT_MEMORY.html" class="nav-link">04 - Context & Memory</a>
+                <a href="05_GOVERNANCE.html" class="nav-link">05 - Governance</a>
+                <a href="06_MULTI_AGENT.html" class="nav-link">06 - Multi-Agent</a>
+                <a href="07_TELEMETRY_SESSIONS.html" class="nav-link">07 - Telemetry & Sessions</a>
+                <a href="08_GATEWAY_ARCHITECTURE.html" class="nav-link">08 - Gateway & Connections</a>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 What You'll Learn</h2>
+            <ul style="margin-left: 25px; line-height: 2;">
+                <li>How Claude Code starts (cli.tsx vs main.tsx)</li>
+                <li>Fast-path optimizations for special flags</li>
+                <li>Different execution modes (REPL, Bridge, Daemon, MCP)</li>
+                <li>Bootstrap initialization sequence</li>
+                <li>Module organization and dependency hierarchy</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>📁 Project Structure</h2>
+
+            <div class="info-box">
+                <strong>Source:</strong> <code>/Users/hongzhuanglim/claude_code/claude-code-source-code-main</code><br>
+                <strong>Total Files:</strong> ~757 TypeScript files<br>
+                <strong>Main Entry:</strong> <code>src/entrypoints/cli.tsx</code> → <code>src/main.tsx</code>
+            </div>
+
+            <h3>Top-Level Directory Structure</h3>
+            <table>
+                <tr>
+                    <th>Directory</th>
+                    <th>Purpose</th>
+                </tr>
+                <tr>
+                    <td><strong>src/entrypoints/</strong></td>
+                    <td>Entry points for different execution modes (CLI, MCP, SDK)</td>
+                </tr>
+                <tr>
+                    <td><strong>src/bootstrap/</strong></td>
+                    <td>Global session state (isolated module with zero dependencies)</td>
+                </tr>
+                <tr>
+                    <td><strong>src/screens/</strong></td>
+                    <td>Full-screen UI modes (REPL, Doctor, Resume)</td>
+                </tr>
+                <tr>
+                    <td><strong>src/tools/</strong></td>
+                    <td>45+ tool implementations (Bash, File ops, Agents, MCP)</td>
+                </tr>
+                <tr>
+                    <td><strong>src/services/</strong></td>
+                    <td>External integrations (API, Analytics, MCP, Policy)</td>
+                </tr>
+                <tr>
+                    <td><strong>src/utils/</strong></td>
+                    <td>331+ utility modules (permissions, settings, telemetry)</td>
+                </tr>
+                <tr>
+                    <td><strong>src/bridge/</strong></td>
+                    <td>IDE extension mode (VS Code, Cursor, etc.)</td>
+                </tr>
+                <tr>
+                    <td><strong>src/coordinator/</strong></td>
+                    <td>Multi-agent coordinator mode</td>
+                </tr>
+                <tr>
+                    <td><strong>web/</strong></td>
+                    <td>Web-based UI (Next.js)</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>🚀 Entry Point Flow</h2>
+
+            <div class="flow-diagram">
+                <h3>Execution Path from CLI Command</h3>
+                <div class="flow-step">
+                    <strong>$ claude [command]</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// package.json
+{
+  "bin": {
+    "claude": "src/entrypoints/cli.tsx"
+  }
+}
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>cli.tsx - Fast Path Router</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// src/entrypoints/cli.tsx (27,674 tokens)
+async function main() {
+  const args = process.argv.slice(2);
+
+  // FAST PATH 1: --version (zero imports)
+  if (args[0] === '--version') {
+    console.log(`${MACRO.VERSION} (Claude Code)`);
+    return;
+  }
+
+  // FAST PATH 2: --dump-system-prompt (ant-only)
+  if (args[0] === '--dump-system-prompt') {
+    // Dynamic import to avoid loading full app
+    return;
+  }
+
+  // FAST PATH 3: Bridge mode (IDE extension)
+  if (args[0] === 'remote-control' || args[0] === 'bridge') {
+    const { bridgeMain } = await import('../bridge/bridgeMain.js');
+    await bridgeMain(args.slice(1));
+    return;
+  }
+
+  // FAST PATH 4: Daemon mode
+  if (args[0] === 'daemon') {
+    const { daemonMain } = await import('../daemon/main.js');
+    await daemonMain(args.slice(1));
+    return;
+  }
+
+  // FAST PATH 5: Background sessions (ps, logs, attach, kill)
+  if (args[0] === 'ps' || args[0] === 'logs') {
+    // ...handle background session management
+    return;
+  }
+
+  // DEFAULT: Load full application (main.tsx)
+  const { main: mainFunction } = await import('../main.js');
+  await mainFunction();
+}
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>main.tsx - Main Application (4,684 lines)</strong>
+                    <p style="margin-top: 10px;">This is where the REAL application begins for interactive sessions</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>⚡ Why Fast Paths?</h2>
+
+            <div class="warning-box">
+                <strong>Performance Optimization:</strong> Fast paths avoid loading unnecessary modules
+            </div>
+
+            <table>
+                <tr>
+                    <th>Command</th>
+                    <th>Module Loading</th>
+                    <th>Startup Time</th>
+                </tr>
+                <tr>
+                    <td><code>claude --version</code></td>
+                    <td>Zero modules (just MACRO.VERSION)</td>
+                    <td>~1ms</td>
+                </tr>
+                <tr>
+                    <td><code>claude bridge</code></td>
+                    <td>Only bridge module (~115KB)</td>
+                    <td>~50ms</td>
+                </tr>
+                <tr>
+                    <td><code>claude</code> (interactive)</td>
+                    <td>Full application (main.tsx)</td>
+                    <td>~200ms</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Execution Modes</h2>
+
+            <h3>1. Interactive REPL (Default)</h3>
+            <div class="code-block">
+$ claude
+# Loads main.tsx → REPL.tsx
+# Full conversation loop with UI rendering
+            </div>
+
+            <h3>2. Bridge Mode (IDE Extension)</h3>
+            <div class="code-block">
+$ claude remote-control
+# Connects local machine to claude.ai bridge
+# Polls for work assignments every 2 seconds
+# Spawns child CLI processes for each session
+            </div>
+
+            <h3>3. Daemon Mode (Long-Running Supervisor)</h3>
+            <div class="code-block">
+$ claude daemon start
+# Runs supervisor process that manages workers
+# Different worker types: assistant, bridge, etc.
+            </div>
+
+            <h3>4. Background Sessions</h3>
+            <div class="code-block">
+$ claude ps                    # List running sessions
+$ claude logs <session-id>     # View session logs
+$ claude attach <session-id>   # Attach to session
+$ claude kill <session-id>     # Kill session
+            </div>
+
+            <h3>5. MCP Server Mode</h3>
+            <div class="code-block">
+$ claude mcp serve
+# Runs as Model Context Protocol server
+# Exposes Claude Code tools to other MCP clients
+            </div>
+
+            <h3>6. Direct Connect</h3>
+            <div class="code-block">
+$ claude open <url>
+# Connect to a direct-connect server
+# Uses WebSocket for real-time communication
+            </div>
+
+            <h3>7. Assistant Mode (KAIROS)</h3>
+            <div class="code-block">
+$ claude assistant [session-id]
+# Connect to remote CCR session
+# View-only mode (no sending commands)
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📦 Module Loading Strategy</h2>
+
+            <div class="info-box">
+                <strong>Design Pattern:</strong> Lazy loading with feature flags for dead code elimination
+            </div>
+
+            <div class="code-block">
+// Feature-gated imports (compiled out if feature disabled)
+import { feature } from 'bun:bundle';
+
+const coordinatorModule = feature('COORDINATOR_MODE')
+  ? require('./coordinator/coordinatorMode.js')
+  : null;
+
+const assistantModule = feature('KAIROS')
+  ? require('./assistant/index.js')
+  : null;
+
+const daemonWorker = feature('DAEMON')
+  ? require('./daemon/workerRegistry.js')
+  : null;
+
+// Dynamic imports for heavy modules
+if (args[0] === 'bridge') {
+  const { bridgeMain } = await import('../bridge/bridgeMain.js');
+  // Only loads when actually needed
+}
+            </div>
+
+            <h3>Benefits for Enterprise</h3>
+            <ul style="margin-left: 25px; line-height: 2;">
+                <li>✅ <strong>Smaller bundles:</strong> Unused features are stripped at build time</li>
+                <li>✅ <strong>Faster startup:</strong> Only load what's needed for the current mode</li>
+                <li>✅ <strong>Easy A/B testing:</strong> Enable/disable features without code changes</li>
+                <li>✅ <strong>Gradual rollouts:</strong> Feature flags control access</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🎬 Next Step</h2>
+            <div class="info-box">
+                <strong>Continue to:</strong> <a href="02_AGENT_LOOP.html">02 - Agent Loop</a> to learn how the core execution cycle works (user input → LLM → tools → response)
+            </div>
+        </div>
+    </div>
+</body>
+</html>

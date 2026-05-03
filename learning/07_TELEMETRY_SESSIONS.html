@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>07 - Telemetry & Session Control</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .subtitle { font-size: 1.2em; opacity: 0.9; }
+        .nav-sequence {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-sequence h3 { color: #667eea; margin-bottom: 15px; }
+        .nav-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .nav-link {
+            padding: 12px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s;
+        }
+        .nav-link:hover { background: #e7f3ff; transform: translateX(5px); }
+        .nav-link.current { background: #667eea; color: white; font-weight: bold; }
+        .section {
+            background: white;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h3 { color: #764ba2; margin: 20px 0 15px 0; }
+        h4 { color: #1f2937; margin: 15px 0 10px 0; }
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .info-box {
+            background: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .highlight-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 20px;
+            border-left: 5px solid #f59e0b;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .warning-box {
+            background: #fff3e0;
+            padding: 15px;
+            border-left: 4px solid #ff9800;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .enterprise-note {
+            background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+            padding: 20px;
+            border-left: 5px solid #ec4899;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .module-box {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .module-name {
+            font-weight: 700;
+            font-size: 1.1em;
+            color: #1e40af;
+        }
+        .module-path {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            background: #e0e7ff;
+            padding: 4px 10px;
+            border-radius: 4px;
+            color: #3730a3;
+        }
+        .module-desc {
+            color: #4b5563;
+            margin-bottom: 12px;
+            line-height: 1.7;
+        }
+        .module-features {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 3px solid #60a5fa;
+        }
+        .module-features ul {
+            margin-left: 20px;
+        }
+        .module-features li {
+            margin-bottom: 6px;
+            color: #374151;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        tr:hover {
+            background: #f9fafb;
+        }
+        code {
+            background: #f1f5f9;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 07 - Telemetry & Session Control</h1>
+            <p class="subtitle">OpenTelemetry, Session Management, Incident Control</p>
+            <p style="margin-top: 10px;">Metrics, Traces, Logs + Session JSONL + Model Training Pipeline</p>
+        </header>
+
+        <div class="nav-sequence">
+            <h3>📖 Learning Path</h3>
+            <div class="nav-links">
+                <a href="01_OVERVIEW_AND_ENTRY_POINTS.html" class="nav-link">01 - Overview & Entry</a>
+                <a href="02_AGENT_LOOP.html" class="nav-link">02 - Agent Loop</a>
+                <a href="03_HARNESS_TOOLKIT.html" class="nav-link">03 - Toolkit</a>
+                <a href="04_CONTEXT_MEMORY.html" class="nav-link">04 - Context & Memory</a>
+                <a href="05_GOVERNANCE.html" class="nav-link">05 - Governance</a>
+                <a href="06_MULTI_AGENT.html" class="nav-link">06 - Multi-Agent</a>
+                <a href="07_TELEMETRY_SESSIONS.html" class="nav-link current">07 - Telemetry & Sessions</a>
+                <a href="08_GATEWAY_ARCHITECTURE.html" class="nav-link">08 - Gateway & Connections</a>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 What You'll Learn</h2>
+            <ul style="margin-left: 25px; line-height: 2;">
+                <li>OpenTelemetry integration (metrics, traces, logs)</li>
+                <li>Span hierarchy (interaction → llm_request → tool)</li>
+                <li>Session persistence with JSONL format</li>
+                <li>Incident control capabilities</li>
+                <li>Model training data pipeline</li>
+                <li>Enterprise telemetry adaptations</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>📡 OpenTelemetry Integration</h2>
+
+            <div class="info-box">
+                <strong>Three Observability Signals:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Metrics:</strong> Counters and gauges (session_count, cost, tokens)</li>
+                    <li><strong>Traces:</strong> Distributed tracing spans (interaction → llm → tool)</li>
+                    <li><strong>Logs:</strong> Structured event logs (tengu_* events)</li>
+                </ul>
+            </div>
+
+            <h3>Telemetry Architecture</h3>
+
+            <table>
+                <tr>
+                    <th>Signal Type</th>
+                    <th>Technology</th>
+                    <th>Use Case</th>
+                    <th>Exporters</th>
+                </tr>
+                <tr>
+                    <td><strong>Metrics</strong></td>
+                    <td>OpenTelemetry Metrics</td>
+                    <td>Counters (session_count, cost, tokens), Gauges (active_sessions)</td>
+                    <td>OTLP, Datadog, BigQuery</td>
+                </tr>
+                <tr>
+                    <td><strong>Traces</strong></td>
+                    <td>OpenTelemetry Traces</td>
+                    <td>Span hierarchy (interaction → llm_request → tool)</td>
+                    <td>OTLP, Datadog</td>
+                </tr>
+                <tr>
+                    <td><strong>Logs</strong></td>
+                    <td>OpenTelemetry Logs</td>
+                    <td>Event logs (tengu_* events) with structured metadata</td>
+                    <td>OTLP, BigQuery</td>
+                </tr>
+            </table>
+
+            <h3>OpenTelemetry Initialization</h3>
+
+            <div class="code-block">
+// utils/telemetry/setup.ts
+
+export async function setupTelemetry(): Promise<void> {
+  // 1. Initialize tracer provider
+  const tracerProvider = new BasicTracerProvider({
+    resource: new Resource({
+      'service.name': 'claude-code',
+      'service.version': MACRO.VERSION,
+    })
+  });
+
+  // 2. Add exporters (OTLP, Datadog, etc.)
+  tracerProvider.addSpanProcessor(
+    new BatchSpanProcessor(new OTLPTraceExporter())
+  );
+
+  tracerProvider.register();
+
+  // 3. Initialize meter provider (metrics)
+  const meterProvider = new MeterProvider({
+    resource: new Resource({
+      'service.name': 'claude-code',
+    })
+  });
+
+  // 4. Initialize logger provider (logs)
+  const loggerProvider = new LoggerProvider({
+    resource: new Resource({
+      'service.name': 'claude-code',
+    })
+  });
+
+  // Store in global STATE
+  STATE.tracerProvider = tracerProvider;
+  STATE.meterProvider = meterProvider;
+  STATE.loggerProvider = loggerProvider;
+}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔍 Span Hierarchy</h2>
+
+            <div class="highlight-box">
+                <strong>Critical Pattern:</strong> Claude Code uses a hierarchical span structure for distributed tracing.
+            </div>
+
+            <div class="code-block">
+// Span hierarchy
+interaction (root span)
+├── llm_request
+│   ├── tool.execution (BashTool)
+│   │   └── tool.blocked_on_user (permission approval)
+│   └── tool.execution (FileReadTool)
+└── hook (user_prompt_submit_hook)
+
+// Example attributes on interaction span:
+{
+  'span.type': 'interaction',
+  'user.prompt': 'Fix the authentication bug',
+  'session.id': 'ses_abc123',
+  'session.model': 'claude-sonnet-4-5',
+  'duration_ms': 12450,
+}
+            </div>
+
+            <h3>Span Creation API</h3>
+
+            <div class="code-block">
+// utils/telemetry/sessionTracing.ts
+
+// 1. Start interaction span (user turn)
+export function startInteractionSpan(userPrompt: string): Span {
+  const span = tracer.startSpan('interaction', {
+    attributes: {
+      'span.type': 'interaction',
+      'user.prompt': truncateContent(userPrompt, 1000),
+      'session.id': getSessionId(),
+      'session.model': getMainLoopModel(),
+    }
+  });
+
+  interactionContext.enterWith({ span, startTime: Date.now() });
+  return span;
+}
+
+// 2. Start LLM request span (child of interaction)
+export function startLLMSpan(messages: Message[]): Span {
+  return tracer.startSpan('llm_request', {
+    attributes: {
+      'span.type': 'llm_request',
+      'message_count': messages.length,
+      'model': getMainLoopModel(),
+    }
+  });
+}
+
+// 3. Start tool execution span (child of llm_request)
+export function startToolSpan(toolName: string, input: unknown): Span {
+  return tracer.startSpan('tool.execution', {
+    attributes: {
+      'span.type': 'tool',
+      'tool.name': toolName,
+      'tool.input': JSON.stringify(input),
+    }
+  });
+}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📝 Session Storage (JSONL)</h2>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">utils/sessionStorage.ts</span>
+                    <span class="module-path">src/utils/sessionStorage.ts</span>
+                </div>
+                <div class="module-desc">
+                    Session persistence and recovery system
+                </div>
+                <div class="module-features">
+                    <strong>Session Storage Format:</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// ~/.claude/sessions/{sessionId}.jsonl
+// Newline-delimited JSON (JSONL) format
+
+// Each line is a JSON object:
+{"type": "message", "role": "user", "content": [...], "timestamp": 1234567890}
+{"type": "message", "role": "assistant", "content": [...], "timestamp": 1234567891}
+{"type": "tool_use", "name": "Bash", "input": {...}, "timestamp": 1234567892}
+{"type": "tool_result", "tool_use_id": "...", "content": [...], "timestamp": 1234567893}
+{"type": "error", "error": "...", "timestamp": 1234567894}
+
+// Metadata file: {sessionId}.metadata.json
+{
+  "sessionId": "abc-123",
+  "userId": "user@example.com",     // For enterprise
+  "orgId": "org-456",                // For enterprise
+  "projectRoot": "/path/to/project",
+  "model": "claude-sonnet-4-5",
+  "startTime": 1234567890,
+  "totalCost": 0.45,
+  "messageCount": 42
+}
+                    </div>
+                </div>
+            </div>
+
+            <h3>Session Operations</h3>
+
+            <div class="code-block">
+// utils/sessionStorage.ts - Key functions
+
+// 1. Load session for resume
+export async function loadTranscriptFromFile(
+  sessionId: SessionId
+): Promise<Message[]> {
+  const sessionPath = getSessionLogPath(sessionId);
+  const lines = await readFile(sessionPath, 'utf-8');
+  return parseJSONL(lines);
+}
+
+// 2. Search sessions by title
+export async function searchSessionsByCustomTitle(
+  query: string
+): Promise<SessionId[]> {
+  const sessions = await getAllSessions();
+  return sessions.filter(s => s.title.includes(query));
+}
+
+// 3. Save agent setting
+export async function saveAgentSetting(
+  sessionId: SessionId,
+  agentType: string
+): Promise<void> {
+  // Persists agent type for resume
+}
+
+// 4. Cache session title
+export async function cacheSessionTitle(
+  sessionId: SessionId,
+  title: string
+): Promise<void> {
+  // Human-readable title for UI
+}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🚨 Incident Control Capabilities</h2>
+
+            <div class="highlight-box">
+                <strong>Critical for Enterprise:</strong> Session control enables real-time incident response, debugging, and user support.
+            </div>
+
+            <h3>1. Error Logging</h3>
+
+            <div class="code-block">
+// bootstrap/state.ts - In-memory error log
+export function addToInMemoryErrorLog(error: Error): void {
+  STATE.inMemoryErrorLog.push({
+    error: errorMessage(error),
+    timestamp: new Date().toISOString(),
+    stack: error.stack,
+  });
+
+  // Limited to last 100 errors
+  if (STATE.inMemoryErrorLog.length > 100) {
+    STATE.inMemoryErrorLog.shift();
+  }
+}
+
+// Retrieve for incident reports
+export function getInMemoryErrorLog(): ErrorLogEntry[] {
+  return STATE.inMemoryErrorLog;
+}
+            </div>
+
+            <h3>2. Slow Operations Tracking</h3>
+
+            <div class="code-block">
+// bootstrap/state.ts - Track slow operations
+export function addSlowOperation(op: string, durationMs: number): void {
+  if (durationMs > 1000) { // Only log operations > 1s
+    STATE.slowOperations.push({
+      operation: op,
+      durationMs: durationMs,
+      timestamp: Date.now(),
+    });
+  }
+}
+
+// Used for performance debugging
+// Example: "FileRead took 5432ms for large.csv"
+            </div>
+
+            <h3>3. Last API Request Capture</h3>
+
+            <div class="code-block">
+// bootstrap/state.ts
+export function setLastAPIRequest(
+  request: BetaMessageStreamParams
+): void {
+  STATE.lastAPIRequest = omit(request, 'messages');
+  STATE.lastAPIRequestMessages = request.messages;
+}
+
+// Used for bug reports - exact request sent to API
+// Helps reproduce API errors
+            </div>
+
+            <h3>4. Session Management Commands</h3>
+
+            <div class="code-block">
+// CLI commands for session control
+$ claude ps                    # List running sessions
+$ claude logs <session-id>     # View session logs
+$ claude attach <session-id>   # Attach to session
+$ claude kill <session-id>     # Kill session
+
+// Background execution
+$ claude "implement feature" --background
+# Returns session ID for later attach
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎓 Model Training Data Pipeline</h2>
+
+            <div class="info-box">
+                <strong>Training Data Collection:</strong> Session JSONL files are ideal for model fine-tuning and evaluation.
+            </div>
+
+            <h3>Training Pipeline Architecture</h3>
+
+            <div class="code-block">
+// Enterprise training data pipeline
+
+// 1. Session Collection
+// ~/.claude/sessions/*.jsonl → S3/GCS bucket
+
+// 2. Data Cleaning
+// - Remove PII (user paths, emails, secrets)
+// - Filter low-quality sessions (errors, incomplete)
+// - Normalize timestamps and IDs
+
+// 3. Format Conversion
+// JSONL → Fine-tuning format (Claude API format)
+[
+  { "role": "user", "content": "..." },
+  { "role": "assistant", "content": "..." }
+]
+
+// 4. Quality Filtering
+// - High tool success rate
+// - Complete task resolution
+// - Positive user feedback (if available)
+
+// 5. Upload to Training Service
+// API call to Claude fine-tuning service
+// Or export for evaluation/analysis
+            </div>
+
+            <h3>Session Quality Metrics</h3>
+
+            <table>
+                <tr>
+                    <th>Metric</th>
+                    <th>Description</th>
+                    <th>Use Case</th>
+                </tr>
+                <tr>
+                    <td><strong>Tool Success Rate</strong></td>
+                    <td>% of tools that didn't error</td>
+                    <td>Filter high-quality sessions</td>
+                </tr>
+                <tr>
+                    <td><strong>Task Completion</strong></td>
+                    <td>Session ended with natural stop</td>
+                    <td>Identify successful interactions</td>
+                </tr>
+                <tr>
+                    <td><strong>User Satisfaction</strong></td>
+                    <td>Thumbs up/down (if collected)</td>
+                    <td>RLHF training data</td>
+                </tr>
+                <tr>
+                    <td><strong>Session Length</strong></td>
+                    <td>Number of turns</td>
+                    <td>Filter too short/long sessions</td>
+                </tr>
+                <tr>
+                    <td><strong>Cost Efficiency</strong></td>
+                    <td>Cost per successful task</td>
+                    <td>Optimize model performance</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>🏢 Enterprise Telemetry Adaptations</h2>
+
+            <div class="enterprise-note">
+                <strong>Multi-Tenant Telemetry:</strong>
+                <p style="margin-top: 10px;">For enterprise systems, enhance telemetry with multi-tenant labels:</p>
+
+                <h4 style="margin-top: 15px;">1. Multi-Tenant Labels</h4>
+                <div class="code-block" style="margin-top: 10px;">
+// Add user/org labels to all telemetry
+const span = tracer.startSpan('interaction', {
+  attributes: {
+    'user.id': userId,
+    'org.id': orgId,
+    'tenant.tier': 'enterprise',  // free/pro/enterprise
+    'session.id': sessionId,
+  }
+});
+
+// Metrics with labels
+sessionCounter.add(1, {
+  'user.id': userId,
+  'org.id': orgId,
+  'model': 'claude-sonnet-4-5',
+});
+                </div>
+
+                <h4 style="margin-top: 15px;">2. Distributed Storage</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Store session JSONL in S3/GCS (not local disk)</li>
+                    <li>Partition by user_id and date</li>
+                    <li>Lifecycle policies (archive after 90 days)</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">3. Real-Time Analytics</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Stream telemetry to Kafka/Kinesis</li>
+                    <li>Real-time dashboards (active users, costs)</li>
+                    <li>Alert on anomalies (cost spikes, errors)</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">4. Cost Attribution</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Track API costs per user/org</li>
+                    <li>Chargeback to business units</li>
+                    <li>Budget alerts and quota enforcement</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">5. Compliance & Audit</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Tamper-proof audit logs</li>
+                    <li>Data retention policies (GDPR, HIPAA)</li>
+                    <li>Export for compliance reports</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">6. PII Protection</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Redact PII from telemetry (paths, emails, keys)</li>
+                    <li>Hash user IDs for analytics</li>
+                    <li>Separate PII storage with encryption</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎬 Next Step</h2>
+            <div class="info-box">
+                <strong>Continue to:</strong> <a href="08_GATEWAY_ARCHITECTURE.html">08 - Gateway & Connections</a> to learn about Bridge mode, Remote sessions, Direct Connect, and KAIROS (vs OpenClaw comparison)
+            </div>
+        </div>
+    </div>
+</body>
+</html>

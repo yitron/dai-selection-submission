@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>08 - Gateway & Connection Architecture</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .subtitle { font-size: 1.2em; opacity: 0.9; }
+        .nav-sequence {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-sequence h3 { color: #667eea; margin-bottom: 15px; }
+        .nav-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .nav-link {
+            padding: 12px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s;
+        }
+        .nav-link:hover { background: #e7f3ff; transform: translateX(5px); }
+        .nav-link.current { background: #667eea; color: white; font-weight: bold; }
+        .section {
+            background: white;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h3 { color: #764ba2; margin: 20px 0 15px 0; }
+        h4 { color: #1f2937; margin: 15px 0 10px 0; }
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .info-box {
+            background: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .success-box {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            padding: 20px;
+            border-left: 5px solid #10b981;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .warning-box {
+            background: #fff3e0;
+            padding: 15px;
+            border-left: 4px solid #ff9800;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .enterprise-note {
+            background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+            padding: 20px;
+            border-left: 5px solid #ec4899;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .flow-diagram {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .flow-step {
+            background: #e7f3ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        .arrow {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        tr:hover {
+            background: #f9fafb;
+        }
+        code {
+            background: #f1f5f9;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌐 08 - Gateway & Connection Architecture</h1>
+            <p class="subtitle">Bridge, Remote, Direct Connect Patterns</p>
+            <p style="margin-top: 10px;">3 Connection Patterns + KAIROS + vs OpenClaw Comparison</p>
+        </header>
+
+        <div class="nav-sequence">
+            <h3>📖 Learning Path</h3>
+            <div class="nav-links">
+                <a href="01_OVERVIEW_AND_ENTRY_POINTS.html" class="nav-link">01 - Overview & Entry</a>
+                <a href="02_AGENT_LOOP.html" class="nav-link">02 - Agent Loop</a>
+                <a href="03_HARNESS_TOOLKIT.html" class="nav-link">03 - Toolkit</a>
+                <a href="04_CONTEXT_MEMORY.html" class="nav-link">04 - Context & Memory</a>
+                <a href="05_GOVERNANCE.html" class="nav-link">05 - Governance</a>
+                <a href="06_MULTI_AGENT.html" class="nav-link">06 - Multi-Agent</a>
+                <a href="07_TELEMETRY_SESSIONS.html" class="nav-link">07 - Telemetry & Sessions</a>
+                <a href="08_GATEWAY_ARCHITECTURE.html" class="nav-link current">08 - Gateway & Connections</a>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 What You'll Learn</h2>
+            <ul style="margin-left: 25px; line-height: 2;">
+                <li>3 connection patterns in Claude Code</li>
+                <li>Bridge mode (HTTP polling for IDE extensions)</li>
+                <li>Remote sessions (WebSocket + HTTP hybrid)</li>
+                <li>Direct Connect (local WebSocket)</li>
+                <li>KAIROS (remote session access)</li>
+                <li>vs OpenClaw unified gateway comparison</li>
+                <li>Enterprise gateway adaptations</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🏗️ Claude Code Connection Patterns</h2>
+
+            <div class="success-box">
+                <strong>✅ Three Connection Patterns:</strong>
+                <table style="margin-top: 15px;">
+                    <tr>
+                        <th>Pattern</th>
+                        <th>Transport</th>
+                        <th>Use Case</th>
+                        <th>Latency</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Bridge Mode</strong></td>
+                        <td>HTTP long-polling</td>
+                        <td>IDE extensions (VS Code, Cursor)</td>
+                        <td>~2s polling interval</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Remote Sessions</strong></td>
+                        <td>WebSocket (receive) + HTTP (send)</td>
+                        <td>Cloud CCR sessions from local CLI</td>
+                        <td>~100ms (real-time)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Direct Connect</strong></td>
+                        <td>WebSocket (bidirectional)</td>
+                        <td>Local server connections</td>
+                        <td>~10ms (local network)</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🌉 1. Bridge Mode (HTTP Polling)</h2>
+
+            <div class="info-box">
+                <strong>Path:</strong> src/bridge/bridgeMain.ts<br>
+                <strong>Use Case:</strong> IDE extensions connecting local machine to claude.ai
+            </div>
+
+            <h3>Bridge Architecture</h3>
+
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <strong>1. Start Bridge Mode</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+$ claude remote-control
+# or
+$ claude bridge
+
+// Starts HTTP polling loop
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>2. Poll for Work (Every 2s)</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// bridge/bridgeMain.ts
+async function pollForWork(api: BridgeApiClient, envId: string) {
+  while (true) {
+    // HTTP GET request to claude.ai API
+    const work = await api.getWork(envId);
+
+    if (work) {
+      // Spawn child process for this session
+      const handle = spawner.spawn({
+        sessionId: work.sessionId,
+        workSecret: work.workSecret,
+        cwd: work.cwd,
+      });
+    }
+
+    await sleep(2000); // Poll every 2 seconds
+  }
+}
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>3. Execute Work (Child Process)</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Spawned child process runs full Claude Code
+// - Executes tools on local machine
+// - Sends results back to claude.ai via HTTP POST
+                    </div>
+                </div>
+            </div>
+
+            <h3>Bridge Mode Characteristics</h3>
+
+            <table>
+                <tr>
+                    <th>Aspect</th>
+                    <th>Implementation</th>
+                    <th>Trade-off</th>
+                </tr>
+                <tr>
+                    <td><strong>Latency</strong></td>
+                    <td>2-second polling interval</td>
+                    <td>Higher latency, but firewall-friendly</td>
+                </tr>
+                <tr>
+                    <td><strong>Firewall</strong></td>
+                    <td>Outbound HTTP only (no inbound)</td>
+                    <td>Works behind corporate firewalls</td>
+                </tr>
+                <tr>
+                    <td><strong>Connection</strong></td>
+                    <td>Client-initiated polling</td>
+                    <td>No persistent connection needed</td>
+                </tr>
+                <tr>
+                    <td><strong>Scalability</strong></td>
+                    <td>One connection per environment</td>
+                    <td>Low overhead per client</td>
+                </tr>
+            </table>
+
+            <div class="code-block">
+// Bridge API endpoints
+POST /v1/bridge/environments/{envId}/poll
+  → Returns work assignment or null
+
+POST /v1/bridge/sessions/{sessionId}/results
+  → Sends tool execution results back
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔌 2. Remote Sessions (WebSocket + HTTP Hybrid)</h2>
+
+            <div class="info-box">
+                <strong>Path:</strong> src/remote/SessionsWebSocket.ts<br>
+                <strong>Use Case:</strong> Access cloud CCR sessions from local CLI
+            </div>
+
+            <h3>Remote Session Architecture</h3>
+
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <strong>1. Connect to Remote Session</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+$ claude assistant [session-id]
+
+// Opens WebSocket connection to claude.ai
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>2. WebSocket Connection (Receive Only)</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// remote/SessionsWebSocket.ts
+export class SessionsWebSocket {
+  async connect(): Promise<void> {
+    const url = `${baseUrl}/v1/sessions/ws/${sessionId}/subscribe`;
+
+    const ws = new WebSocket(url, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+
+    ws.on('message', (data) => {
+      const message = JSON.parse(data);
+      if (message.type === 'control_request') {
+        this.handlePermissionRequest(message);
+      } else {
+        this.callbacks.onMessage(message);
+      }
+    });
+  }
+}
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>3. HTTP POST for Sending (Not WebSocket)</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Sending messages uses HTTP POST (not WebSocket!)
+async sendMessage(message: string): Promise<void> {
+  await fetch(`${baseUrl}/v1/sessions/${sessionId}/messages`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ content: message })
+  });
+}
+
+// Why HTTP for sending?
+// - Simpler retry logic
+// - Better error handling
+// - WebSocket used only for real-time receive
+                    </div>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <strong>Hybrid Pattern:</strong> WebSocket for receiving (real-time updates) + HTTP POST for sending (reliability)
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🖥️ 3. Direct Connect (Local WebSocket)</h2>
+
+            <div class="info-box">
+                <strong>Command:</strong> claude open &lt;url&gt;<br>
+                <strong>Use Case:</strong> Connect to local Direct Connect servers
+            </div>
+
+            <h3>Direct Connect Flow</h3>
+
+            <div class="code-block">
+// Start Direct Connect server (user's app)
+$ direct-connect-server --port 8080
+
+// Connect from Claude Code CLI
+$ claude open ws://localhost:8080
+
+// Establishes bidirectional WebSocket connection
+// - Send user messages via WebSocket
+// - Receive assistant responses via WebSocket
+// - Low latency (local network)
+            </div>
+
+            <div class="success-box">
+                <strong>✅ Use Cases:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Local development servers</li>
+                    <li>Custom integrations</li>
+                    <li>Testing & debugging</li>
+                    <li>Offline mode (no cloud required)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🚀 KAIROS (Remote Session Access)</h2>
+
+            <div class="info-box">
+                <strong>Full Name:</strong> Assistant Mode (KAIROS)<br>
+                <strong>Purpose:</strong> View/assist cloud sessions from local CLI
+            </div>
+
+            <div class="code-block">
+// Connect to remote CCR session
+$ claude assistant [session-id]
+
+// Features:
+// - View-only mode (cannot send commands directly)
+// - Real-time session activity
+// - WebSocket connection to claude.ai
+// - Used for customer support / debugging
+            </div>
+
+            <div class="warning-box">
+                <strong>Security:</strong> KAIROS requires authentication token and session access permissions from API.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🆚 Claude Code vs OpenClaw Gateway</h2>
+
+            <table>
+                <tr>
+                    <th>Aspect</th>
+                    <th>Claude Code</th>
+                    <th>OpenClaw</th>
+                </tr>
+                <tr>
+                    <td><strong>Architecture</strong></td>
+                    <td>3 separate connection patterns</td>
+                    <td>Unified gateway with routing</td>
+                </tr>
+                <tr>
+                    <td><strong>Bridge Mode</strong></td>
+                    <td>HTTP long-polling (2s interval)</td>
+                    <td>Centralized gateway routes requests</td>
+                </tr>
+                <tr>
+                    <td><strong>Remote Sessions</strong></td>
+                    <td>WebSocket (receive) + HTTP (send)</td>
+                    <td>WebSocket through gateway</td>
+                </tr>
+                <tr>
+                    <td><strong>Routing</strong></td>
+                    <td>Direct client-to-API connections</td>
+                    <td>All traffic through central gateway</td>
+                </tr>
+                <tr>
+                    <td><strong>Load Balancing</strong></td>
+                    <td>API-level load balancing</td>
+                    <td>Gateway-level load balancing</td>
+                </tr>
+                <tr>
+                    <td><strong>Session Affinity</strong></td>
+                    <td>Client polls same environment</td>
+                    <td>Gateway maintains session routing</td>
+                </tr>
+                <tr>
+                    <td><strong>Observability</strong></td>
+                    <td>Client-side OpenTelemetry</td>
+                    <td>Gateway-level telemetry + client</td>
+                </tr>
+            </table>
+
+            <h3>Key Differences</h3>
+
+            <div class="enterprise-note">
+                <strong>Design Philosophy:</strong>
+
+                <h4 style="margin-top: 15px;">Claude Code Approach</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Multiple specialized connection patterns for different use cases</li>
+                    <li>Direct client-to-API connections (no central gateway)</li>
+                    <li>Simpler architecture, lower operational overhead</li>
+                    <li>Trade-off: Less centralized control</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">OpenClaw Approach</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Unified gateway for all connection types</li>
+                    <li>Central routing, load balancing, and session affinity</li>
+                    <li>Gateway-level observability and control</li>
+                    <li>Trade-off: More complex infrastructure</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🏢 Enterprise Gateway Adaptations</h2>
+
+            <div class="enterprise-note">
+                <strong>Multi-Tenant Gateway Architecture:</strong>
+                <p style="margin-top: 10px;">For enterprise systems, you'll likely want an OpenClaw-style unified gateway:</p>
+
+                <h4 style="margin-top: 15px;">1. Unified Gateway Benefits</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Centralized authentication & authorization</li>
+                    <li>Rate limiting per user/org</li>
+                    <li>Request routing to agent instances</li>
+                    <li>Load balancing across agent pools</li>
+                    <li>Gateway-level caching</li>
+                    <li>DDoS protection</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">2. Gateway Architecture</h4>
+                <div class="code-block" style="margin-top: 10px;">
+// Enterprise gateway stack
+┌─────────────────────────────────────┐
+│   Load Balancer (AWS ALB/NLB)      │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│   API Gateway (Kong/Envoy/Custom)   │
+│   - Authentication (JWT)            │
+│   - Rate Limiting                   │
+│   - Request Routing                 │
+└──────────────┬──────────────────────┘
+               │
+        ┌──────┴──────┐
+        │             │
+┌───────▼─────┐ ┌────▼────────┐
+│ Agent Pool  │ │ Agent Pool  │
+│ (Org A)     │ │ (Org B)     │
+│ K8s Pods    │ │ K8s Pods    │
+└─────────────┘ └─────────────┘
+                </div>
+
+                <h4 style="margin-top: 15px;">3. Session Affinity</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Route user to same agent instance for conversation continuity</li>
+                    <li>Use sticky sessions or distributed cache (Redis)</li>
+                    <li>Handle instance failures with session migration</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">4. WebSocket Gateway</h4>
+                <div class="code-block" style="margin-top: 10px;">
+// WebSocket gateway with session routing
+class WebSocketGateway {
+  private sessions: Map<string, AgentConnection> = new Map();
+
+  async handleConnection(ws: WebSocket, userId: string) {
+    // Route to existing agent or spawn new one
+    const agent = await this.routeToAgent(userId);
+
+    // Bidirectional message forwarding
+    ws.on('message', (msg) => agent.send(msg));
+    agent.on('message', (msg) => ws.send(msg));
+
+    // Track for session affinity
+    this.sessions.set(userId, agent);
+  }
+
+  async routeToAgent(userId: string): Promise<AgentConnection> {
+    // Check if user has active agent
+    if (this.sessions.has(userId)) {
+      return this.sessions.get(userId)!;
+    }
+
+    // Spawn new agent from pool
+    return await agentPool.getAgent(userId);
+  }
+}
+                </div>
+
+                <h4 style="margin-top: 15px;">5. Gateway Observability</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Gateway-level metrics (requests/sec, latency, errors)</li>
+                    <li>Distributed tracing through gateway</li>
+                    <li>Request/response logging for debugging</li>
+                    <li>Real-time dashboards (Grafana, Datadog)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎓 Conclusion</h2>
+
+            <div class="success-box">
+                <strong>🎉 You've completed the learning path!</strong>
+
+                <p style="margin-top: 15px;">You now understand:</p>
+                <ol style="margin-left: 25px; margin-top: 10px; line-height: 2;">
+                    <li>Entry points and module loading (01)</li>
+                    <li>Agent loop execution cycle (02)</li>
+                    <li>Harness toolkit with 45+ tools (03)</li>
+                    <li>Context & memory management (04)</li>
+                    <li>Multi-layer governance & security (05)</li>
+                    <li>4 multi-agent systems (06)</li>
+                    <li>OpenTelemetry & session control (07)</li>
+                    <li>3 connection patterns & gateway architecture (08)</li>
+                </ol>
+
+                <p style="margin-top: 15px;"><strong>Next Steps:</strong></p>
+                <ul style="margin-left: 25px; margin-top: 10px;">
+                    <li>Review the comprehensive HTML files for deeper details</li>
+                    <li>Design your enterprise multi-tenant architecture</li>
+                    <li>Map single-user patterns to multi-user adaptations</li>
+                    <li>Build your agent core with these learnings</li>
+                </ul>
+
+                <p style="margin-top: 15px; text-align: center;">
+                    <strong>Good luck building your multi-user enterprise agent system! 🚀</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,1003 @@
+<!-- GOVERNANCE -->
+        <div id="governance" class="architecture-category">
+            <div class="category-header">
+                <div class="category-icon">🔒</div>
+                <div class="category-title">
+                    <h2>4. Governance</h2>
+                    <p class="category-desc">Permissions, security policies, sandboxing, access control</p>
+                </div>
+            </div>
+
+            <h3>Governance Architecture</h3>
+
+            <div class="warning-box">
+                <strong>⚠️ Security Model:</strong> Claude Code implements a <strong>multi-layered permission system</strong> with:
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Permission modes (ask, auto, bypass)</li>
+                    <li>Tool-level allow/deny rules</li>
+                    <li>Dangerous command detection</li>
+                    <li>Sandbox execution (Bubblewrap/Docker)</li>
+                    <li>Organization policy limits (enterprise)</li>
+                    <li>Remote managed settings</li>
+                </ul>
+            </div>
+
+            <h3>Permission System Layers</h3>
+
+            <div class="flow-diagram">
+                <h4>Permission Check Flow</h4>
+                <div class="flow-step">
+                    <strong>Layer 1: Permission Mode Check</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Permission modes (stored in settings)
+type PermissionMode = 'ask' | 'auto' | 'bypass';
+
+// ask: Always prompt user for approval (default)
+// auto: Auto-approve safe tools, prompt for dangerous (with classifier)
+// bypass: Never prompt (dangerous, testing only)
+
+const mode = getPermissionMode(); // From settings.json
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>Layer 2: Policy Limits Check (Enterprise)</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// services/policyLimits/index.ts
+// Organization-level restrictions from API
+
+const isPolicyAllowed = async (feature: string): Promise<boolean> => {
+  const limits = await getPolicyLimits();
+
+  // Example restrictions:
+  // - allow_remote_control: false
+  // - allow_web_search: false
+  // - max_token_usage: 1000000
+  // - allowed_models: ['claude-sonnet-4']
+
+  return !limits.restrictions[feature];
+};
+
+// Fails OPEN on errors (non-blocking)
+// Cached with ETag for performance
+// Background polling every hour
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>Layer 3: Tool Permission Rules</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// utils/permissions/PermissionRule.ts
+
+type PermissionRule = {
+  tool: string;           // Tool name (e.g., 'Bash', 'FileEdit')
+  content?: string;       // Optional content matcher
+  value: 'allow' | 'deny'; // Rule action
+  source: PermissionRuleSource; // Where rule came from
+};
+
+// Examples:
+// Allow all git commands:
+{ tool: 'Bash', content: 'git*', value: 'allow' }
+
+// Deny destructive git operations:
+{ tool: 'Bash', content: 'git push --force*', value: 'deny' }
+
+// Allow reading any file:
+{ tool: 'FileRead', value: 'allow' }
+
+// Deny editing .env files:
+{ tool: 'FileEdit', content: '**/.env', value: 'deny' }
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>Layer 4: Dangerous Pattern Detection</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// utils/permissions/dangerousPatterns.ts
+
+const DANGEROUS_BASH_PATTERNS = [
+  'python', 'python3', 'node', 'ruby', 'perl',
+  'curl', 'wget', 'nc', 'netcat',
+  'rm -rf', 'chmod', 'chown',
+  'eval', 'exec', 'sudo',
+];
+
+// For auto mode: block dangerous patterns even with allow rules
+const isDangerous = isDangerousBashPermission(toolName, command);
+if (mode === 'auto' && isDangerous) {
+  // Always prompt, never auto-approve
+  return requireUserApproval();
+}
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>Layer 5: Sandbox Execution</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// utils/sandbox/sandbox-adapter.ts
+
+class SandboxManager {
+  static isSandboxingEnabled(): boolean {
+    // Check if Bubblewrap (Linux) or Docker available
+    return hasBuiltinSandbox() || hasDockerSandbox();
+  }
+
+  static executeInSandbox(command: string): Promise<Result> {
+    // Create isolated environment:
+    // - Read-only /usr, /bin, /lib
+    // - Writable workspace directory only
+    // - No network (unless explicitly allowed)
+    // - Limited PIDs, memory, CPU
+
+    return bubblewrap.run({
+      command,
+      allowedPaths: [workspaceDir],
+      network: false,
+      timeout: 120000,
+    });
+  }
+}
+                    </div>
+                </div>
+            </div>
+
+            <h3>Key Governance Modules</h3>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">utils/permissions/</span>
+                    <span class="module-path">src/utils/permissions/ (27 files)</span>
+                </div>
+                <div class="module-desc">
+                    Permission system implementation - rule parsing, checking, user prompts
+                </div>
+                <div class="module-features">
+                    <strong>Core Files:</strong>
+                    <ul>
+                        <li><strong>PermissionMode.ts:</strong> Permission mode definitions & parsing</li>
+                        <li><strong>PermissionRule.ts:</strong> Rule types & matching logic</li>
+                        <li><strong>permissions.ts:</strong> Main permission checking function</li>
+                        <li><strong>permissionsLoader.ts:</strong> Load rules from disk (settings.json, .permissions files)</li>
+                        <li><strong>dangerousPatterns.ts:</strong> Dangerous command detection patterns</li>
+                        <li><strong>permissionSetup.ts:</strong> Initial permission context setup</li>
+                        <li><strong>autoModeState.ts:</strong> Auto mode classifier state</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">services/policyLimits/</span>
+                    <span class="module-path">src/services/policyLimits/</span>
+                </div>
+                <div class="module-desc">
+                    Organization-level policy restrictions (Enterprise feature)
+                </div>
+                <div class="module-features">
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Fetches policy from API (claude.ai or Console)</li>
+                        <li>Fail-open on errors (non-blocking)</li>
+                        <li>ETag-based caching (only re-fetch if changed)</li>
+                        <li>Background polling (1 hour interval)</li>
+                        <li>Per-feature restrictions (remote_control, web_search, etc.)</li>
+                    </ul>
+                    <strong>Policy Types:</strong>
+                    <ul>
+                        <li><code>allow_remote_control</code>: Bridge mode access</li>
+                        <li><code>allow_web_search</code>: WebSearchTool availability</li>
+                        <li><code>allowed_models</code>: Model allowlist</li>
+                        <li><code>max_token_usage</code>: Usage quotas</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">services/remoteManagedSettings/</span>
+                    <span class="module-path">src/services/remoteManagedSettings/</span>
+                </div>
+                <div class="module-desc">
+                    Remote configuration management (MDM-like for enterprises)
+                </div>
+                <div class="module-features">
+                    <strong>Capabilities:</strong>
+                    <ul>
+                        <li>Fetch settings from API (overrides local settings)</li>
+                        <li>Enforce organization-wide configurations</li>
+                        <li>Priority: Remote > Policy > MDM > User > Default</li>
+                        <li>Real-time updates via polling</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">utils/sandbox/</span>
+                    <span class="module-path">src/utils/sandbox/</span>
+                </div>
+                <div class="module-desc">
+                    Sandbox execution for Bash/PowerShell commands
+                </div>
+                <div class="module-features">
+                    <strong>Sandbox Backends:</strong>
+                    <ul>
+                        <li><strong>Bubblewrap (Linux):</strong> Lightweight namespace-based sandboxing</li>
+                        <li><strong>Docker (all platforms):</strong> Container-based isolation</li>
+                        <li><strong>Windows Sandbox:</strong> Windows-native isolation (planned)</li>
+                    </ul>
+                    <strong>Isolation Features:</strong>
+                    <ul>
+                        <li>Read-only system directories</li>
+                        <li>Writable workspace only</li>
+                        <li>Optional network isolation</li>
+                        <li>Resource limits (CPU, memory, PIDs)</li>
+                        <li>Timeout enforcement</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Auto Mode Classifier (Advanced)</h3>
+
+            <div class="info-box">
+                <strong>Auto Mode:</strong> Uses a separate LLM call to classify tool requests as safe/unsafe before auto-approving.
+            </div>
+
+            <div class="code-block">
+// utils/permissions/autoModeState.ts
+
+// Classifier prompt: "Is this Bash command safe to auto-execute?"
+const classifierPrompt = `
+You are a security classifier. Determine if this tool use is safe to auto-approve.
+
+Tool: ${toolName}
+Input: ${JSON.stringify(toolInput)}
+
+Rules:
+- Auto-approve: Read operations, safe git commands, npm install
+- Require approval: Write operations, rm/destructive commands, network access
+
+Respond with: SAFE or UNSAFE
+`;
+
+const classification = await llm.classify(classifierPrompt);
+if (classification === 'SAFE') {
+  // Auto-approve
+  return { approved: true, source: 'auto-classifier' };
+} else {
+  // Prompt user
+  return await showApprovalDialog(toolName, toolInput);
+}
+            </div>
+
+            <div class="enterprise-note">
+                <strong>🏢 Enterprise Governance Enhancements:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>RBAC:</strong> Role-based access control (admin, developer, viewer)</li>
+                    <li><strong>Org Hierarchies:</strong> Inherit policies from parent orgs</li>
+                    <li><strong>Audit Logging:</strong> Log all permission decisions with user/org context</li>
+                    <li><strong>Custom Policies:</strong> Per-org dangerous pattern lists</li>
+                    <li><strong>Compliance Reporting:</strong> Export policy violations for SOC2/ISO27001</li>
+                    <li><strong>Break-Glass Access:</strong> Emergency bypass with logging & approval</li>
+                    <li><strong>Time-Based Policies:</strong> Restrict features to business hours</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- MULTI-AGENT ORCHESTRATION -->
+        <div id="multi-agent" class="architecture-category">
+            <div class="category-header">
+                <div class="category-icon">🤖</div>
+                <div class="category-title">
+                    <h2>5. Multi-Agent Orchestration</h2>
+                    <p class="category-desc">Coordinator mode, agent spawning, team management, inter-agent communication</p>
+                </div>
+            </div>
+
+            <h3>Multi-Agent Architecture</h3>
+
+            <div class="success-box">
+                <strong>✅ Multi-Agent Patterns:</strong> Claude Code supports TWO multi-agent models:
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Coordinator Mode:</strong> Single coordinator agent + multiple worker agents</li>
+                    <li><strong>Team Mode:</strong> Peer-to-peer agent collaboration with shared memory</li>
+                </ul>
+            </div>
+
+            <h3>Coordinator Mode Architecture</h3>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">coordinator/coordinatorMode.ts</span>
+                    <span class="module-path">src/coordinator/coordinatorMode.ts</span>
+                </div>
+                <div class="module-desc">
+                    Coordinator mode implementation - orchestrate multiple worker agents
+                </div>
+                <div class="module-features">
+                    <strong>Coordinator Capabilities:</strong>
+                    <ul>
+                        <li>Spawn worker agents via <code>AgentTool</code></li>
+                        <li>Send follow-up messages via <code>SendMessageTool</code></li>
+                        <li>Stop workers via <code>TaskStopTool</code></li>
+                        <li>Receive worker results as user-role messages (XML format)</li>
+                        <li>Subscribe to GitHub PR events</li>
+                    </ul>
+                    <strong>Worker Restrictions:</strong>
+                    <ul>
+                        <li>Limited tool access (Bash, Read, Edit, MCP tools)</li>
+                        <li>Cannot spawn sub-agents (flat hierarchy)</li>
+                        <li>Results sent back to coordinator automatically</li>
+                        <li>Isolated conversation context</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h4>Coordinator Message Flow</h4>
+
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <strong>User Request</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+User: "Implement authentication and write tests"
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>Coordinator Planning</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+Coordinator (to user):
+"I'll spawn two workers:
+1. Worker A: Implement authentication logic
+2. Worker B: Write comprehensive tests"
+
+// Spawns agents
+await AgentTool({
+  prompt: "Implement OAuth2 authentication in src/auth.ts",
+  subagent_type: "general-purpose"
+}); // Returns agent_id: "agent_abc123"
+
+await AgentTool({
+  prompt: "Write tests for authentication in tests/auth.test.ts",
+  subagent_type: "general-purpose"
+}); // Returns agent_id: "agent_def456"
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>Workers Execute</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Worker A executes independently
+Worker A:
+  - Reads existing code
+  - Implements OAuth2 logic
+  - Uses BashTool, FileEditTool
+  - Returns result to coordinator
+
+// Worker B executes in parallel
+Worker B:
+  - Reads authentication code
+  - Writes test cases
+  - Runs tests via BashTool
+  - Returns result to coordinator
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>Results Arrive as User Messages</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Worker results arrive as XML in user-role messages
+
+<task-notification>
+<task-id>agent_abc123</task-id>
+<status>completed</status>
+<result>
+I've implemented OAuth2 authentication in src/auth.ts with:
+- Login endpoint with JWT tokens
+- Refresh token flow
+- Logout endpoint
+</result>
+</task-notification>
+
+// Coordinator sees this as a USER message (not assistant)
+// This is how the coordinator receives worker outputs
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>Coordinator Synthesis</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+Coordinator (to user):
+"Both workers completed successfully:
+
+✅ Authentication implemented (Worker A)
+✅ Tests written and passing (Worker B)
+
+The OAuth2 flow is ready with 15 passing tests."
+                    </div>
+                </div>
+            </div>
+
+            <h3>Agent Tool Deep Dive</h3>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">tools/AgentTool/</span>
+                    <span class="module-path">src/tools/AgentTool/ (17 files)</span>
+                </div>
+                <div class="module-desc">
+                    Agent spawning and management system
+                </div>
+                <div class="module-features">
+                    <strong>Key Files:</strong>
+                    <table style="margin-top: 10px;">
+                        <tr>
+                            <th>File</th>
+                            <th>Purpose</th>
+                        </tr>
+                        <tr>
+                            <td>AgentTool.tsx (234KB)</td>
+                            <td>Main agent tool implementation</td>
+                        </tr>
+                        <tr>
+                            <td>runAgent.ts (36KB)</td>
+                            <td>Agent execution loop</td>
+                        </tr>
+                        <tr>
+                            <td>forkSubagent.ts</td>
+                            <td>Spawn child process for agent</td>
+                        </tr>
+                        <tr>
+                            <td>resumeAgent.ts</td>
+                            <td>Resume paused agents</td>
+                        </tr>
+                        <tr>
+                            <td>agentMemory.ts</td>
+                            <td>Agent-specific memory isolation</td>
+                        </tr>
+                        <tr>
+                            <td>loadAgentsDir.ts (26KB)</td>
+                            <td>Load custom agent definitions</td>
+                        </tr>
+                        <tr>
+                            <td>built-in/</td>
+                            <td>Built-in agent types (Explore, Plan, Bash, etc.)</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <h4>Agent Types</h4>
+
+            <table>
+                <tr>
+                    <th>Agent Type</th>
+                    <th>Purpose</th>
+                    <th>Available Tools</th>
+                </tr>
+                <tr>
+                    <td><strong>general-purpose</strong></td>
+                    <td>Full-featured agent for complex tasks</td>
+                    <td>All tools (Bash, File ops, Web, MCP, sub-agents)</td>
+                </tr>
+                <tr>
+                    <td><strong>Explore</strong></td>
+                    <td>Fast codebase exploration</td>
+                    <td>Glob, Grep, Read (no Edit/Write)</td>
+                </tr>
+                <tr>
+                    <td><strong>Plan</strong></td>
+                    <td>Implementation planning</td>
+                    <td>Glob, Grep, Read, ExitPlanMode</td>
+                </tr>
+                <tr>
+                    <td><strong>Bash</strong></td>
+                    <td>Command execution specialist</td>
+                    <td>Bash only</td>
+                </tr>
+                <tr>
+                    <td><strong>test-runner</strong></td>
+                    <td>Run tests after code changes</td>
+                    <td>Bash, Read</td>
+                </tr>
+                <tr>
+                    <td><strong>Custom Agents</strong></td>
+                    <td>User-defined agent types</td>
+                    <td>Configurable via .agents/ directory</td>
+                </tr>
+            </table>
+
+            <h3>Team Mode (Peer-to-Peer)</h3>
+
+            <div class="info-box">
+                <strong>Team Mode vs Coordinator Mode:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Coordinator:</strong> Hierarchical (1 leader + N workers)</li>
+                    <li><strong>Team:</strong> Flat (N peers collaborating)</li>
+                </ul>
+            </div>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">utils/swarm/</span>
+                    <span class="module-path">src/utils/swarm/ (15+ files)</span>
+                </div>
+                <div class="module-desc">
+                    Team mode implementation - peer agent collaboration
+                </div>
+                <div class="module-features">
+                    <strong>Key Concepts:</strong>
+                    <ul>
+                        <li><strong>Teammates:</strong> Agents in the same team (shared team name)</li>
+                        <li><strong>Shared Memory:</strong> Team-scoped MEMORY.md file</li>
+                        <li><strong>Cross-Agent Messages:</strong> Send messages between teammates</li>
+                        <li><strong>Team Lifecycle:</strong> TeamCreate, TeamDelete tools</li>
+                    </ul>
+                    <strong>Key Files:</strong>
+                    <ul>
+                        <li><strong>teamHelpers.ts:</strong> Team creation/deletion</li>
+                        <li><strong>teammatePromptAddendum.ts:</strong> Team context injection</li>
+                        <li><strong>teammateModeSnapshot.ts:</strong> Team state snapshots</li>
+                        <li><strong>reconnection.ts:</strong> Reconnect to existing teams</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="enterprise-note">
+                <strong>🏢 Enterprise Multi-Agent Adaptations:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Agent Pools:</strong> Pre-warmed agent instances per user/org</li>
+                    <li><strong>Agent Quotas:</strong> Limit concurrent agents per user (e.g., max 5)</li>
+                    <li><strong>Agent Scheduling:</strong> Queue agent requests when pool exhausted</li>
+                    <li><strong>Cross-User Agents:</strong> Share agents across org (with permissions)</li>
+                    <li><strong>Agent Monitoring:</strong> Real-time dashboard of active agents</li>
+                    <li><strong>Agent Billing:</strong> Track agent usage costs per user/org</li>
+                    <li><strong>Hierarchical Teams:</strong> Multi-level coordinator hierarchies</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- OUTSIDE AGENT SYSTEM -->
+        <div id="outside-agent" class="architecture-category">
+            <div class="category-header">
+                <div class="category-icon">📊</div>
+                <div class="category-title">
+                    <h2>6. Outside Agent System</h2>
+                    <p class="category-desc">Telemetry, session control, incident management, model training</p>
+                </div>
+            </div>
+
+            <h3>Telemetry System (Already Covered in Detail)</h3>
+
+            <div class="info-box">
+                See <strong>Section 3</strong> in <code>CLAUDE_CODE_ARCHITECTURE_ANALYSIS.html</code> for comprehensive telemetry details.
+            </div>
+
+            <h4>Telemetry Quick Reference</h4>
+
+            <table>
+                <tr>
+                    <th>Signal Type</th>
+                    <th>Technology</th>
+                    <th>Use Case</th>
+                </tr>
+                <tr>
+                    <td><strong>Metrics</strong></td>
+                    <td>OpenTelemetry Metrics</td>
+                    <td>Counters (session_count, cost, tokens), Gauges (active_sessions)</td>
+                </tr>
+                <tr>
+                    <td><strong>Traces</strong></td>
+                    <td>OpenTelemetry Traces</td>
+                    <td>Span hierarchy (interaction → llm_request → tool)</td>
+                </tr>
+                <tr>
+                    <td><strong>Logs</strong></td>
+                    <td>OpenTelemetry Logs</td>
+                    <td>Event logs (tengu_* events) with structured metadata</td>
+                </tr>
+                <tr>
+                    <td><strong>Exporters</strong></td>
+                    <td>OTLP, Datadog, BigQuery</td>
+                    <td>Multi-backend routing for different consumers</td>
+                </tr>
+            </table>
+
+            <h3>Session Control for Incident Management</h3>
+
+            <div class="highlight-box">
+                <strong>Critical for Enterprise:</strong> Session control enables real-time incident response, debugging, and user support.
+            </div>
+
+            <h4>Session Management Capabilities</h4>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">utils/sessionStorage.ts</span>
+                    <span class="module-path">src/utils/sessionStorage.ts</span>
+                </div>
+                <div class="module-desc">
+                    Session persistence and recovery system
+                </div>
+                <div class="module-features">
+                    <strong>Session Storage Format:</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// ~/.claude/sessions/{sessionId}.jsonl
+// Newline-delimited JSON (JSONL) format
+
+// Each line is a JSON object:
+{"type": "message", "role": "user", "content": [...], "timestamp": 1234567890}
+{"type": "message", "role": "assistant", "content": [...], "timestamp": 1234567891}
+{"type": "tool_use", "name": "BashTool", "input": {...}, "timestamp": 1234567892}
+{"type": "tool_result", "tool_use_id": "...", "content": [...], "timestamp": 1234567893}
+{"type": "error", "error": "...", "timestamp": 1234567894}
+
+// Metadata file: {sessionId}.metadata.json
+{
+  "sessionId": "abc-123",
+  "userId": "user@example.com", // For enterprise
+  "orgId": "org-456",           // For enterprise
+  "projectRoot": "/path/to/project",
+  "model": "claude-sonnet-4-5",
+  "startTime": 1234567890,
+  "totalCost": 0.45,
+  "messageCount": 42
+}
+                    </div>
+                </div>
+            </div>
+
+            <h4>Session Lifecycle Operations</h4>
+
+            <div class="code-block">
+// utils/sessionStorage.ts - Key functions
+
+// 1. Load session for resume
+export async function loadTranscriptFromFile(
+  sessionId: SessionId
+): Promise<MessageType[]> {
+  const sessionPath = getSessionLogPath(sessionId);
+  const lines = await readFile(sessionPath, 'utf-8');
+  return parseJSONL(lines);
+}
+
+// 2. Search sessions by custom title
+export async function searchSessionsByCustomTitle(
+  query: string
+): Promise<SessionId[]> {
+  const sessions = await getAllSessions();
+  return sessions.filter(s => s.title.includes(query));
+}
+
+// 3. Save agent setting to session
+export async function saveAgentSetting(
+  sessionId: SessionId,
+  agentType: string
+): Promise<void> {
+  // Persists agent type for resume
+}
+
+// 4. Cache session title
+export async function cacheSessionTitle(
+  sessionId: SessionId,
+  title: string
+): Promise<void> {
+  // Human-readable title for UI
+}
+            </div>
+
+            <h3>Incident Control Capabilities</h3>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">Incident Management Toolkit</span>
+                    <span class="module-path">Various modules</span>
+                </div>
+                <div class="module-desc">
+                    Tools for debugging and incident response
+                </div>
+                <div class="module-features">
+                    <strong>1. Session Inspection</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// bootstrap/state.ts - In-memory error log
+export function addToInMemoryErrorLog(error: Error): void {
+  STATE.inMemoryErrorLog.push({
+    error: errorMessage(error),
+    timestamp: new Date().toISOString(),
+  });
+  // Limited to last 100 errors
+  if (STATE.inMemoryErrorLog.length > 100) {
+    STATE.inMemoryErrorLog.shift();
+  }
+}
+
+// Retrieve for incident reports
+export function getInMemoryErrorLog(): ErrorLogEntry[] {
+  return STATE.inMemoryErrorLog;
+}
+                    </div>
+                    <strong>2. Slow Operations Tracking</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// bootstrap/state.ts - Track slow operations
+export function addSlowOperation(op: string, durationMs: number): void {
+  STATE.slowOperations.push({
+    operation: op,
+    durationMs: durationMs,
+    timestamp: Date.now(),
+  });
+}
+
+// Used for performance debugging
+// Example: "FileRead took 5432ms for large.csv"
+                    </div>
+                    <strong>3. Last API Request Capture</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// bootstrap/state.ts
+export function setLastAPIRequest(
+  request: BetaMessageStreamParams
+): void {
+  STATE.lastAPIRequest = omit(request, 'messages');
+  STATE.lastAPIRequestMessages = request.messages; // Ant-only
+}
+
+// Used for bug reports - exact request sent to API
+                    </div>
+                    <strong>4. Session Kill / Pause</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// cli/bg.ts - Background session management
+
+// Kill a running session
+export async function killSession(sessionId: SessionId): Promise<void> {
+  const pid = getSessionPid(sessionId);
+  if (pid) {
+    process.kill(pid, 'SIGTERM');
+    logEvent('tengu_session_killed', { sessionId });
+  }
+}
+
+// Attach to running session (debugging)
+export async function attachSession(sessionId: SessionId): Promise<void> {
+  // Attach to background session's stdio
+  // Used for support: "Let me look at your session"
+}
+                    </div>
+                </div>
+            </div>
+
+            <h3>Model Training Data Collection</h3>
+
+            <div class="warning-box">
+                <strong>⚠️ Privacy & Training:</strong> Claude Code collects training data with <strong>explicit user consent</strong> and <strong>PII protection</strong>.
+            </div>
+
+            <h4>Training Data Pipeline</h4>
+
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <strong>1. User Consent (Opt-In)</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// bootstrap/state.ts
+export function getUserMsgOptIn(): boolean {
+  // User must explicitly opt-in for message logging
+  return STATE.userMsgOptIn;
+}
+
+// Settings prompt on first run:
+// "Help improve Claude Code by sharing usage data? (Y/n)"
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>2. Session Recording</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Sessions are ALREADY logged to .jsonl files
+// For training, extract:
+// - User prompts (with PII redaction)
+// - Tool uses & results
+// - Model responses
+// - Success/failure indicators
+
+// Example training sample:
+{
+  "session_id": "redacted",
+  "interaction": {
+    "user_intent": "implement authentication",
+    "context": ["git_repo", "typescript_project"],
+    "tools_used": ["FileEdit", "BashTool"],
+    "outcome": "success",
+    "duration_seconds": 45
+  }
+}
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>3. PII Redaction</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Before sending to training pipeline:
+function redactPII(session: Session): RedactedSession {
+  return {
+    ...session,
+    messages: session.messages.map(msg => ({
+      ...msg,
+      // Redact file paths
+      content: redactFilePaths(msg.content),
+      // Redact API keys, secrets
+      content: redactSecrets(msg.content),
+      // Redact user-specific info
+      content: redactUserInfo(msg.content),
+    }))
+  };
+}
+                    </div>
+                </div>
+                <div class="arrow">⬇</div>
+                <div class="flow-step">
+                    <strong>4. Training Dataset Export</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// services/analytics/firstPartyEventLoggingExporter.ts
+// Exports to BigQuery with PII controls
+
+export class FirstPartyEventLoggingExporter {
+  async export(events: Event[]): Promise<void> {
+    // Send to BigQuery table with:
+    // - Column-level encryption for sensitive fields
+    // - Row-level access controls
+    // - Audit logging of all accesses
+
+    await bigquery.insert('training_events', events);
+  }
+}
+
+// Training team queries BigQuery:
+// - Filter by outcome (successful interactions)
+// - Sample diverse use cases
+// - Generate training examples
+                    </div>
+                </div>
+            </div>
+
+            <h4>Training Signals Collected</h4>
+
+            <table>
+                <tr>
+                    <th>Signal</th>
+                    <th>Purpose</th>
+                    <th>PII Level</th>
+                </tr>
+                <tr>
+                    <td>Tool success/failure rates</td>
+                    <td>Improve tool reliability</td>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <td>User prompt → tool sequence</td>
+                    <td>Improve tool selection</td>
+                    <td>Low (redacted)</td>
+                </tr>
+                <tr>
+                    <td>Error recovery patterns</td>
+                    <td>Improve error handling</td>
+                    <td>Medium (redacted)</td>
+                </tr>
+                <tr>
+                    <td>Multi-agent coordination</td>
+                    <td>Improve orchestration</td>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <td>Context usage efficiency</td>
+                    <td>Improve prompt caching</td>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <td>User satisfaction (implicit)</td>
+                    <td>Identify pain points</td>
+                    <td>Low</td>
+                </tr>
+            </table>
+
+            <div class="enterprise-note">
+                <strong>🏢 Enterprise Telemetry & Training Enhancements:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Org-Level Dashboards:</strong> Real-time metrics per organization</li>
+                    <li><strong>User Analytics:</strong> Per-user usage patterns, costs, success rates</li>
+                    <li><strong>Custom Metrics:</strong> Org-specific KPIs (e.g., "PRs merged", "bugs fixed")</li>
+                    <li><strong>Anomaly Detection:</strong> Alert on unusual patterns (spikes in errors, costs)</li>
+                    <li><strong>Capacity Planning:</strong> Predict resource needs based on growth</li>
+                    <li><strong>Training Data Privacy:</strong> Tenant-isolated training (train on org's data only)</li>
+                    <li><strong>Federated Learning:</strong> Train models without centralizing data</li>
+                    <li><strong>Model Customization:</strong> Fine-tune models per organization</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- FINAL SUMMARY -->
+        <div class="section" style="background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border: 3px solid #0ea5e9;">
+            <h2>🎯 Enterprise Implementation Checklist</h2>
+
+            <h3>Infrastructure Adaptations</h3>
+            <table>
+                <tr>
+                    <th>Component</th>
+                    <th>Single-User (Claude Code)</th>
+                    <th>Multi-User Enterprise</th>
+                </tr>
+                <tr>
+                    <td><strong>State Management</strong></td>
+                    <td>Global singleton STATE</td>
+                    <td>Per-user state isolation (Redis, PostgreSQL)</td>
+                </tr>
+                <tr>
+                    <td><strong>Session Storage</strong></td>
+                    <td>~/.claude/sessions/ (local files)</td>
+                    <td>Distributed storage (S3, database) with user/org keys</td>
+                </tr>
+                <tr>
+                    <td><strong>Telemetry</strong></td>
+                    <td>Single OpenTelemetry provider</td>
+                    <td>Multi-tenant collectors with user/org labels</td>
+                </tr>
+                <tr>
+                    <td><strong>Permissions</strong></td>
+                    <td>User-level settings</td>
+                    <td>RBAC with org hierarchies</td>
+                </tr>
+                <tr>
+                    <td><strong>Agent Execution</strong></td>
+                    <td>Local process spawning</td>
+                    <td>Container orchestration (Kubernetes pods)</td>
+                </tr>
+                <tr>
+                    <td><strong>Memory</strong></td>
+                    <td>MEMORY.md files</td>
+                    <td>Vector database (pgvector) with tenant isolation</td>
+                </tr>
+            </table>
+
+            <h3>Key Architecture Patterns to Replicate</h3>
+            <ol style="margin-left: 25px; margin-top: 15px;">
+                <li><strong>Bootstrap State Pattern:</strong> Centralized session metadata with zero circular dependencies</li>
+                <li><strong>Tool System:</strong> Modular, permission-aware tools with common interface</li>
+                <li><strong>Multi-Layer Governance:</strong> Permission modes → Policy limits → Tool rules → Dangerous patterns → Sandbox</li>
+                <li><strong>Span-Based Tracing:</strong> Hierarchical tracing (interaction → llm_request → tool) for debugging</li>
+                <li><strong>Event-Driven Telemetry:</strong> logEvent() sink pattern with PII protection</li>
+                <li><strong>Session Recovery:</strong> JSONL-based conversation logs for resume/debugging</li>
+                <li><strong>Agent Isolation:</strong> Per-agent memory, conversation context, color assignment</li>
+                <li><strong>Fail-Open Policies:</strong> API errors don't block execution (graceful degradation)</li>
+            </ol>
+
+            <h3>Critical Differences for Multi-User</h3>
+            <div class="warning-box">
+                <strong>⚠️ Don't Just Scale the CLI:</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>Replace global STATE with per-request context (user ID, org ID, session ID)</li>
+                    <li>Add authentication layer (OAuth, SAML, API keys)</li>
+                    <li>Implement resource quotas (API calls, agents, storage per user/org)</li>
+                    <li>Add billing/metering (track costs per user/org)</li>
+                    <li>Implement rate limiting at user/org level</li>
+                    <li>Add cross-user access controls (prevent session hijacking)</li>
+                    <li>Implement audit logging for compliance</li>
+                    <li>Add admin UI for org management</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border: 3px solid #10b981;">
+            <h2>✅ Documentation Complete</h2>
+            <p><strong>All Sections Covered:</strong></p>
+            <ul style="margin-left: 25px; margin-top: 10px;">
+                <li>✅ 1. Agent Loop (Execution Cycle)</li>
+                <li>✅ 2. Harness Toolkit (Tool System)</li>
+                <li>✅ 3. Context & Memory Management</li>
+                <li>✅ 4. Governance (Permissions, Security, Policies)</li>
+                <li>✅ 5. Multi-Agent Orchestration (Coordinator, Teams)</li>
+                <li>✅ 6. Outside Agent System (Telemetry, Sessions, Training)</li>
+            </ul>
+            <p style="margin-top: 20px; font-size: 1.1em;"><strong>Files Generated:</strong></p>
+            <ul style="margin-left: 25px;">
+                <li><code>CLAUDE_CODE_ARCHITECTURE_ANALYSIS.html</code> - Detailed telemetry & session control</li>
+                <li><code>CLAUDE_CODE_ENTERPRISE_PART2.html</code> - Complete enterprise architecture mapping</li>
+            </ul>
+        </div>

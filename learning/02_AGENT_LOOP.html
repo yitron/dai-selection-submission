@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>02 - Agent Loop (Core Execution)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .subtitle { font-size: 1.2em; opacity: 0.9; }
+        .nav-sequence {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-sequence h3 { color: #667eea; margin-bottom: 15px; }
+        .nav-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .nav-link {
+            padding: 12px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s;
+        }
+        .nav-link:hover { background: #e7f3ff; transform: translateX(5px); }
+        .nav-link.current { background: #667eea; color: white; font-weight: bold; }
+        .section {
+            background: white;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h3 { color: #764ba2; margin: 20px 0 15px 0; }
+        h4 { color: #1f2937; margin: 15px 0 10px 0; }
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .info-box {
+            background: #e7f3ff;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .warning-box {
+            background: #fff3e0;
+            padding: 15px;
+            border-left: 4px solid #ff9800;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .enterprise-note {
+            background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+            padding: 20px;
+            border-left: 5px solid #ec4899;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .flow-diagram {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .flow-step {
+            background: #e7f3ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        .arrow {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+        .module-box {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .module-name {
+            font-weight: 700;
+            font-size: 1.1em;
+            color: #1e40af;
+        }
+        .module-path {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            background: #e0e7ff;
+            padding: 4px 10px;
+            border-radius: 4px;
+            color: #3730a3;
+        }
+        .module-desc {
+            color: #4b5563;
+            margin-bottom: 12px;
+            line-height: 1.7;
+        }
+        .module-features {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 3px solid #60a5fa;
+        }
+        .module-features ul {
+            margin-left: 20px;
+        }
+        .module-features li {
+            margin-bottom: 6px;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔄 02 - Agent Loop</h1>
+            <p class="subtitle">Core Execution Cycle</p>
+            <p style="margin-top: 10px;">User Input → LLM Processing → Tool Execution → Response Assembly</p>
+        </header>
+
+        <div class="nav-sequence">
+            <h3>📖 Learning Path</h3>
+            <div class="nav-links">
+                <a href="01_OVERVIEW_AND_ENTRY_POINTS.html" class="nav-link">01 - Overview & Entry</a>
+                <a href="02_AGENT_LOOP.html" class="nav-link current">02 - Agent Loop</a>
+                <a href="03_HARNESS_TOOLKIT.html" class="nav-link">03 - Toolkit</a>
+                <a href="04_CONTEXT_MEMORY.html" class="nav-link">04 - Context & Memory</a>
+                <a href="05_GOVERNANCE.html" class="nav-link">05 - Governance</a>
+                <a href="06_MULTI_AGENT.html" class="nav-link">06 - Multi-Agent</a>
+                <a href="07_TELEMETRY_SESSIONS.html" class="nav-link">07 - Telemetry & Sessions</a>
+                <a href="08_GATEWAY_ARCHITECTURE.html" class="nav-link">08 - Gateway & Connections</a>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 What You'll Learn</h2>
+            <ul style="margin-left: 25px; line-height: 2;">
+                <li>How the agent loop processes user requests from input to response</li>
+                <li>Key modules: REPL.tsx (UI), query.ts (orchestration), QueryEngine.ts (API)</li>
+                <li>Message flow and streaming response handling</li>
+                <li>Tool coordination and recursive query execution</li>
+                <li>Enterprise adaptations for multi-user systems</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🔁 Core Loop Architecture</h2>
+
+            <div class="flow-diagram">
+                <h3>Agent Execution Flow</h3>
+
+                <div class="flow-step">
+                    <strong>1. User Input</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// screens/REPL.tsx - Main conversation loop
+const handleUserMessage = async (userInput: string) => {
+  // 1. Create user message
+  const userMessage = createUserMessage(userInput);
+
+  // 2. Add to conversation history
+  updateAppState(state => ({
+    ...state,
+    messages: [...state.messages, userMessage]
+  }));
+
+  // 3. Start interaction span (telemetry)
+  const span = startInteractionSpan(userInput);
+
+  // 4. Process query
+  await processQuery(userMessage);
+};
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>2. Query Processing</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// query.ts - Main query processor (68KB file)
+export async function query(
+  messages: Message[],
+  options: QueryOptions
+): Promise<QueryResult> {
+  // 1. Prepare messages (compaction, context injection)
+  const preparedMessages = await prepareMessages(messages);
+
+  // 2. Create API request
+  const apiRequest = prepareApiRequest(preparedMessages, options);
+
+  // 3. Execute via QueryEngine
+  return await queryEngine.execute(apiRequest);
+}
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>3. LLM Request</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// QueryEngine.ts - API execution (46KB file)
+const response = await anthropic.messages.stream({
+  model: getMainLoopModel(),
+  messages: preparedMessages,
+  tools: getTools(),
+  max_tokens: 4096,
+  system: await getSystemPrompt(),
+});
+
+// Stream processing
+for await (const chunk of response) {
+  if (chunk.type === 'content_block_start') {
+    // Handle tool use or text
+  }
+}
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>4. Tool Execution</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Tool execution with permission checks
+if (chunk.type === 'tool_use') {
+  const tool = getTool(chunk.name);
+
+  // Permission check
+  const permitted = await checkToolPermission(tool, chunk.input);
+
+  if (permitted) {
+    const result = await tool.execute(chunk.input);
+    // Add tool result to message chain
+  }
+}
+                    </div>
+                </div>
+
+                <div class="arrow">⬇</div>
+
+                <div class="flow-step">
+                    <strong>5. Response Assembly</strong>
+                    <div class="code-block" style="margin-top: 10px;">
+// Create assistant message with tool results
+const assistantMessage = createAssistantMessage({
+  content: textBlocks,
+  tool_uses: toolUseBlocks,
+});
+
+// If tools were called, continue loop for tool results
+if (hasToolUses) {
+  return query([...messages, assistantMessage, ...toolResults]);
+}
+
+// Otherwise, return final response
+return { message: assistantMessage, stopReason: 'end_turn' };
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📦 Key Module Breakdown</h2>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">screens/REPL.tsx</span>
+                    <span class="module-path">src/screens/REPL.tsx (~896KB)</span>
+                </div>
+                <div class="module-desc">
+                    Main interactive loop - renders UI, handles user input, manages conversation state
+                </div>
+                <div class="module-features">
+                    <strong>Features:</strong>
+                    <ul>
+                        <li>Text input handling with history (up/down arrows)</li>
+                        <li>Real-time streaming response display</li>
+                        <li>Tool execution progress indicators</li>
+                        <li>Permission approval dialogs</li>
+                        <li>Auto-mode toggle (Shift+Tab)</li>
+                        <li>Keyboard shortcuts (Ctrl+C for cancel, etc.)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">query.ts</span>
+                    <span class="module-path">src/query.ts (68KB)</span>
+                </div>
+                <div class="module-desc">
+                    Core query orchestrator - manages message preparation, API calls, tool coordination
+                </div>
+                <div class="module-features">
+                    <strong>Responsibilities:</strong>
+                    <ul>
+                        <li>Message compaction (auto/manual)</li>
+                        <li>Context injection (CLAUDE.md, system context)</li>
+                        <li>Token budget management</li>
+                        <li>Error recovery & retry logic</li>
+                        <li>Streaming response handling</li>
+                        <li>Tool result pairing (match tool_use with tool_result)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="module-box">
+                <div class="module-header">
+                    <span class="module-name">QueryEngine.ts</span>
+                    <span class="module-path">src/QueryEngine.ts (46KB)</span>
+                </div>
+                <div class="module-desc">
+                    Low-level API execution engine - handles streaming, chunking, message assembly
+                </div>
+                <div class="module-features">
+                    <strong>Key Functions:</strong>
+                    <ul>
+                        <li>API request/response handling</li>
+                        <li>Stream event processing (content_block_start, content_block_delta, etc.)</li>
+                        <li>Tool use detection & extraction</li>
+                        <li>Rate limiting & throttling</li>
+                        <li>Cache hit detection (prompt caching)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔄 Recursive Query Pattern</h2>
+
+            <div class="info-box">
+                <strong>Key Insight:</strong> The agent loop is recursive. When tools are invoked, the loop continues with tool results added to the conversation.
+            </div>
+
+            <div class="code-block">
+// Simplified recursive pattern
+async function query(messages: Message[]): Promise<Response> {
+  // 1. Call LLM
+  const response = await llm.query(messages);
+
+  // 2. Check if tools were used
+  const toolUses = extractToolUses(response);
+
+  if (toolUses.length === 0) {
+    // Base case: No tools, return final response
+    return response;
+  }
+
+  // 3. Execute all tools
+  const toolResults = await Promise.all(
+    toolUses.map(tool => executeTool(tool))
+  );
+
+  // 4. Recursive case: Add results and continue
+  return query([
+    ...messages,
+    response,        // Assistant message with tool_use blocks
+    ...toolResults,  // Tool result messages
+  ]);
+}
+            </div>
+
+            <div class="warning-box">
+                <strong>Loop Termination:</strong> The recursive loop terminates when:
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>The LLM returns a response with no tool uses</li>
+                    <li>Max turns limit is reached</li>
+                    <li>User cancels (Ctrl+C)</li>
+                    <li>An error occurs and retry logic exhausts</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Message Flow Diagram</h2>
+
+            <div class="flow-diagram">
+                <h4>Complete Message Exchange</h4>
+
+                <div class="code-block">
+// Example conversation with tool use
+[
+  // Turn 1: User asks question
+  { role: 'user', content: 'What files are in this directory?' },
+
+  // Turn 2: Assistant invokes tool
+  {
+    role: 'assistant',
+    content: [
+      { type: 'text', text: 'Let me check the directory.' },
+      {
+        type: 'tool_use',
+        id: 'toolu_01ABC',
+        name: 'Bash',
+        input: { command: 'ls -la' }
+      }
+    ]
+  },
+
+  // Turn 3: Tool result
+  {
+    role: 'user',
+    content: [
+      {
+        type: 'tool_result',
+        tool_use_id: 'toolu_01ABC',
+        content: 'file1.txt\nfile2.py\nREADME.md'
+      }
+    ]
+  },
+
+  // Turn 4: Assistant responds with answer
+  {
+    role: 'assistant',
+    content: 'The directory contains 3 files: file1.txt, file2.py, and README.md'
+  }
+]
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>⚡ Streaming Response Handling</h2>
+
+            <div class="info-box">
+                <strong>Stream Events:</strong> The API returns responses as a stream of events, allowing real-time UI updates.
+            </div>
+
+            <div class="code-block">
+// QueryEngine.ts - Stream event types
+for await (const event of response) {
+  switch (event.type) {
+    case 'message_start':
+      // Message begins
+      break;
+
+    case 'content_block_start':
+      // New content block (text or tool_use)
+      if (event.content_block.type === 'tool_use') {
+        // Tool invocation starting
+      }
+      break;
+
+    case 'content_block_delta':
+      // Incremental content (streaming text)
+      if (event.delta.type === 'text_delta') {
+        appendText(event.delta.text);
+      }
+      break;
+
+    case 'content_block_stop':
+      // Content block complete
+      break;
+
+    case 'message_delta':
+      // Message metadata updates (stop_reason, usage)
+      break;
+
+    case 'message_stop':
+      // Message complete
+      break;
+  }
+}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🏢 Enterprise Adaptations</h2>
+
+            <div class="enterprise-note">
+                <strong>Multi-User Query Management:</strong>
+                <p style="margin-top: 10px;">For enterprise multi-tenant systems, you'll need to adapt the agent loop:</p>
+
+                <h4 style="margin-top: 15px;">1. State Isolation</h4>
+                <ul style="margin-left: 20px;">
+                    <li><strong>Problem:</strong> Global STATE singleton is shared across all users</li>
+                    <li><strong>Solution:</strong> Create per-user context objects passed through query chain</li>
+                </ul>
+
+                <div class="code-block" style="margin-top: 10px;">
+// Enterprise pattern: Per-user context
+type UserContext = {
+  userId: string;
+  orgId: string;
+  sessionId: string;
+  permissions: Permission[];
+  quotas: ResourceQuotas;
+};
+
+async function query(
+  messages: Message[],
+  context: UserContext
+): Promise<Response> {
+  // All operations use context instead of global STATE
+}
+                </div>
+
+                <h4 style="margin-top: 15px;">2. Rate Limiting</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Implement per-user/org rate limits in QueryEngine</li>
+                    <li>Track API calls, tokens, and tool executions per user</li>
+                    <li>Queue requests when limits are reached</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">3. Session Affinity</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Route user to same agent instance for conversation continuity</li>
+                    <li>Use sticky sessions or distributed cache for state</li>
+                    <li>Handle instance failures with session migration</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">4. Request Queueing</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Fair scheduling across users (prevent one user monopolizing)</li>
+                    <li>Priority queues for premium users/orgs</li>
+                    <li>Circuit breakers for failing user sessions</li>
+                </ul>
+
+                <h4 style="margin-top: 15px;">5. Observability</h4>
+                <ul style="margin-left: 20px;">
+                    <li>Tag all telemetry with user_id and org_id</li>
+                    <li>Track per-user costs and usage metrics</li>
+                    <li>Alert on anomalous user behavior</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎬 Next Step</h2>
+            <div class="info-box">
+                <strong>Continue to:</strong> <a href="03_HARNESS_TOOLKIT.html">03 - Harness Toolkit</a> to learn about the 45+ tools that power agent capabilities (Bash, File ops, Web, MCP, Agents)
+            </div>
+        </div>
+    </div>
+</body>
+</html>
